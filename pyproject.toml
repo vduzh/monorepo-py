@@ -9,6 +9,9 @@ packages = [
     { include = "libs/*" },
 ]
 
+[tool.poetry.scripts]
+speach-to-text = "apps.speach_to_text:main"
+
 [tool.poetry.dependencies]
 python = "^3.11"
 
