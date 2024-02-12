@@ -16,3 +16,5 @@ python = "^3.11"
 
 # Application-specific dependencies
 openai = "^1.12.0"
+pychatgpt = "^0.4.3.3"
+python-dotenv = "^1.0.1"
