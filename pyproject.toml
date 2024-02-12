@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "machine-learning-py"
+version = "0.1.0"
+description = "A machine learning using Poetry"
+authors = ["Viktar Duzh <Viktar.Duzh@gmail.com>"]
+
+packages = [
+    { include = "apps/*" },
+    { include = "libs/*" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# Shared libraries
+
+# Application-specific dependencies
