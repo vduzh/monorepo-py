@@ -3,14 +3,14 @@ import unittest
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from model import get_model
+from model import get_chat_model
 
 
 class TestPromptTemplates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Initialize the model
-        cls._llm = get_model()
+        cls._llm = get_chat_model()
 
         # convert the chat message to a string
         cls._output_parser = StrOutputParser()
