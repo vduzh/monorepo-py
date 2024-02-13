@@ -1,21 +1,23 @@
 import unittest
 
-from dotenv import load_dotenv
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Initialize the model
-llm = ChatOpenAI()
-
-# convert the chat message to a string
-output_parser = StrOutputParser()
+from model import get_model
 
 
 class TestPromptTemplates(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the model
+        cls._llm = get_model()
+
+        # convert the chat message to a string
+        cls._output_parser = StrOutputParser()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._llm = None
 
     def test_basic_chain(self):
         prompt = ChatPromptTemplate.from_messages([
@@ -23,7 +25,7 @@ class TestPromptTemplates(unittest.TestCase):
             ("user", "{input}")
         ])
 
-        chain = prompt | llm | output_parser
+        chain = prompt | self._llm | self._output_parser
 
         s = chain.invoke({"input": "how can langsmith help with testing?"})
 

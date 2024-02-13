@@ -1,24 +1,21 @@
 import unittest
 
-from dotenv import load_dotenv
-from langchain_core.output_parsers import StrOutputParser
-from langchain_openai import ChatOpenAI
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Initialize the model
-llm = ChatOpenAI()
-
-# convert the chat message to a string
-output_parser = StrOutputParser()
+from model import get_model
 
 
 class TestPromptTemplates(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the model
+        cls._llm = get_model()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._llm = None
 
     def test_basic(self):
         test_value = "This is a test!"
-        s = llm.invoke("Say " + test_value)
+        s = self._llm.invoke("Say " + test_value)
         self.assertTrue(s.content, test_value)
 
 
