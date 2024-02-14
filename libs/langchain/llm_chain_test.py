@@ -18,7 +18,7 @@ class TestLLMChain(unittest.TestCase):
         cls._llm = None
 
     def test_create_chain(self):
-        prompt = PromptTemplate.from_template("What is a good name for a company that makes ${product}?")
+        prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
         chain = LLMChain(llm=self._llm, prompt=prompt)
         print(chain)
 
