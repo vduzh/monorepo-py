@@ -69,10 +69,6 @@ class TestFewShotPromptTemplate(unittest.TestCase):
                                             template="Question: {question}\n{answer}")
         # print(cls.example_prompt.format(**cls.examples[0]))
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._llm = None
-
     def test_create_prompt_template_from_example_set(self):
         # feed examples and formatter to FewShotPromptTemplate
         few_shot_prompt_template = FewShotPromptTemplate(
