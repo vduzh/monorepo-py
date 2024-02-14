@@ -80,20 +80,21 @@ class TestChatPromptTemplates(unittest.TestCase):
         self.assertTrue(chat_prompt_value.to_string().startswith("System:"))
 
     def test_create_prompt_with_chat_prompt_composition(self):
+        # good practice to start with a system message
+        base_template = SystemMessage(content="You are a nice pirate")
+        # create a pipeline
         chat_prompt_template = (
-                SystemMessage(content="You are a nice pirate") +
+                base_template +
+                # use message when there is no variables to be formatted
                 HumanMessage(content="hi") +
                 AIMessage(content="what?") +
+                # a string -> HumanMessagePromptTemplate
                 "{input}"
         )
-        print(chat_prompt_template)
-        # https://python.langchain.com/docs/modules/model_io/prompts/composition
-        # TODO: Finish!!!!
-        # template = "What is a good name for a company that makes colorful socks?"
-        # text = ", make it funny and in {language}"
-        # prompt_template = PromptTemplate.from_template(template) + text
-        # self.assertEqual(prompt_template.template, template + text)
-        # self.assertEqual(prompt_template.input_variables, ["language"])
+        # print(chat_prompt_template)
+
+        message_list = chat_prompt_template.format_messages(input="i said hi!")
+        # print(message_list)
 
     def test_basic_chain(self):
         chat_prompt_template = ChatPromptTemplate.from_messages([
