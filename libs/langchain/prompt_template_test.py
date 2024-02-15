@@ -4,7 +4,7 @@ from datetime import datetime
 from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompt_values import StringPromptValue
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, PipelinePromptTemplate
 
 from model import get_llm
 
@@ -85,6 +85,44 @@ class TestPromptTemplates(unittest.TestCase):
         template_text = partial_prompt_template.format(bar="Bar")
 
         self.assertEqual(template_text, "FooBar")
+
+    def test_compos_multiple_prompts(self):
+        # final prompt
+        final_template = "{foo}{bar}"
+        final_prompt_template = PromptTemplate.from_template(final_template)
+
+        # first (foo) prompt template
+        foo_template = "Foo: Some {xxx} text."
+        foo_prompt_template = PromptTemplate.from_template(foo_template)
+
+        # second (bar) prompt template
+        bar_template = "Bar: Some {yyy} text."
+        bar_prompt_template = PromptTemplate.from_template(bar_template)
+
+        # parts of prompts to combine
+        pipeline_prompts = [
+            ("foo", foo_prompt_template),
+            ("bar", bar_prompt_template)
+        ]
+        # create a prompt
+        pipeline_prompt_template = PipelinePromptTemplate(
+            final_prompt=final_prompt_template,
+            pipeline_prompts=pipeline_prompts
+        )
+
+        self.assertEqual(len(pipeline_prompt_template.input_variables), 2)
+        self.assertTrue(all(e in pipeline_prompt_template.input_variables for e in ["xxx", "yyy"]))
+
+        self.assertEqual(
+            pipeline_prompt_template.format(xxx="AAA", yyy="BBB"),
+            "Foo: Some AAA text.Bar: Some BBB text."
+        )
+
+    def test_(self):
+        target_list = [6, 4, 8, 9, 10]
+        test_list = [4, 6, 9, 11]
+        res = all(e in target_list for e in test_list)
+        print(res)
 
     def test_basic_chain(self):
         prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
