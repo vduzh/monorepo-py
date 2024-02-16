@@ -1,0 +1,7 @@
+Formatted text has its genesis in the pre-computer use of underscoring to embolden passages in typewritten manuscripts. In the first interactive systems of early computer technology, underlining was not possible, and users made up for this lack (and the lack of formatting in ASCII) by using certain symbols as substitutes. Emphasis, for example, could be achieved in ASCII in a number of ways:[1][2]
+
+Capitalization: I am NOT making this up.
+Surrounding with underscores: I am _not_ making this up.
+Surrounding with asterisks: I am *not* making this up.
+Spacing: I am n o t making this up.
+Surrounding by underscores was also used for book titles: Look it up in _The_C_Programming_Language_.
