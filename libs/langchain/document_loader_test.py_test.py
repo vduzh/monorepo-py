@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 # poetry add langchain@1.0.6
 # pip add langchain-community@0.0.19
 # https://github.com/langchain-ai/langchain/issues/17514
-class TestRetrieval(unittest.TestCase):
+class TestDocumentLoader(unittest.TestCase):
 
     def test_text_loader(self):
         loader = TextLoader("./data/some_text.txt")
