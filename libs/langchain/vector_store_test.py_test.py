@@ -3,14 +3,15 @@ import unittest
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores.chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+
+from libs.langchain.model import get_embeddings
 
 
 class TestVectorStore(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.embeddings_model = OpenAIEmbeddings()
+        cls.embeddings_model = get_embeddings()
 
     @staticmethod
     def _get_documents():
