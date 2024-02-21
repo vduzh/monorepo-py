@@ -118,11 +118,12 @@ class TestPromptTemplates(unittest.TestCase):
             "Foo: Some AAA text.Bar: Some BBB text."
         )
 
-    def test_(self):
-        target_list = [6, 4, 8, 9, 10]
-        test_list = [4, 6, 9, 11]
-        res = all(e in target_list for e in test_list)
-        print(res)
+    def test_chain(self):
+        prompt_template = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
+        runnable = {"product": lambda x: x["input"]} | prompt_template
+        print("test_chain:", runnable)
+        out = runnable.invoke({"input": "colorful socks"})
+        print("test_chain:", out)
 
     def test_basic_chain(self):
         prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")

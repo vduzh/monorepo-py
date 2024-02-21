@@ -1,7 +1,8 @@
-import json
 import unittest
 
+from langchain.output_parsers.openai_functions import JsonOutputFunctionsParser
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.utils.function_calling import convert_to_openai_tool
 
 from model import get_chat_model
@@ -14,7 +15,19 @@ def multiply(a: int, b: int) -> int:
         a: First integer
         b: Second integer
     """
+    print("multiply", a, b)
     return a * b
+
+
+def multiply_strings(a: str, b: str) -> int:
+    """Multiply two strings together.
+
+    Args:
+        a: First string
+        b: Second string
+    """
+    print("multiply_strings", a, b)
+    return a.upper() + b.lower()
 
 
 class TestChatModel(unittest.TestCase):
@@ -68,6 +81,11 @@ class TestChatModel(unittest.TestCase):
         out_message = self.chat_model.invoke(input_messages)
         print(out_message)
 
+    def test_(self):
+        # MessagesPlaceholder
+        pass
+
+
     # def test_invoke(self):
     #     text = "This is a test!"
     #     messages = [HumanMessage(content="Say " + text)]
@@ -107,13 +125,20 @@ class TestChatModel(unittest.TestCase):
     def test_python_function_calling(self):
         # define function
         tool = convert_to_openai_tool(multiply)
+        tool2 = convert_to_openai_tool(multiply_strings)
         # print(json.dumps(tool, indent=2))
 
-        # out_message = self.chat_model.invoke(
-        #     "what's 5 times three",
-        #     tools=[convert_to_openai_tool(multiply)]
-        # )
-        # print(out_message)
+        tools = [tool, tool2]
+        # tools = [tool]
+
+        parser = JsonOutputFunctionsParser()
+
+        # pass the function in to our model
+        out_message = self.chat_model.invoke("what's 5 times three", tools=tools)
+        print("multiply:", out_message)
+
+        # out_message = self.chat_model.invoke("what's foo times bar", tools=tools)
+        # print("multiply_strings:", out_message.content)
 
         # chat_model_with_tool = self.chat_model.bind(tools=[convert_to_openai_tool(multiply)])
         # chat_model_with_tool.invoke("what's 5 times three")
