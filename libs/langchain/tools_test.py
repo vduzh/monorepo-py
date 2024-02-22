@@ -7,6 +7,7 @@ from langchain.agents import tool
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
 from langchain_community.tools.file_management import MoveFileTool
 from langchain_community.tools.shell import ShellTool
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools.wikipedia.tool import WikipediaQueryRun
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
 from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
@@ -137,6 +138,11 @@ class TestTools(unittest.TestCase):
         search_tool = DuckDuckGoSearchRun()
         result = search_tool.run("Manchester United vs Luton town match summary")
         # print("DuckDuckGoSearchRun:result", result)
+
+    def test_built_in_tavily_search_results_tool(self):
+        search_tool = TavilySearchResults(max_results=1)
+        results = search_tool.run("what is LangChain?")
+        print("TavilySearchResults:result", results[0]["content"])
 
     def test_custom_tool_with_tool_decorator(self):
         custom_tool = search
