@@ -1,22 +1,12 @@
 import unittest
+from pprint import pprint
 
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompt_values import ChatPromptValue
-from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
-
-from model import get_chat_model
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 
 
 class TestChatPromptTemplates(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls._llm = get_chat_model()
-        cls._output_parser = StrOutputParser()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._llm = None
 
     def test_create_prompt_from_template_with_type_and_content(self):
         template = "You are a helpful assistant that translates {input_language} to {output_language}."
@@ -61,8 +51,11 @@ class TestChatPromptTemplates(unittest.TestCase):
             ("system", template),
             ("human", human_template)
         ])
-        chat_prompt_value = chat_prompt_template.invoke({"input_language": "English", "output_language": "French",
-                                                         "text": "I love programming."})
+        chat_prompt_value = chat_prompt_template.invoke({
+            "input_language": "English",
+            "output_language": "French",
+            "text": "I love programming."
+        })
 
         self.assertIs(type(chat_prompt_value), ChatPromptValue)
 
@@ -96,16 +89,20 @@ class TestChatPromptTemplates(unittest.TestCase):
         message_list = chat_prompt_template.format_messages(input="i said hi!")
         # print(message_list)
 
-    def test_basic_chain(self):
+    def test_create_prompt_wit_messages_placeholder(self):
+        chat_history = [
+            HumanMessage(content='How many letters in the word educa? Return the result as a number.'),
+            AIMessage(content='The word "educa" has 5 letters.')
+        ]
+
         chat_prompt_template = ChatPromptTemplate.from_messages([
-            ("system", "You are world class technical documentation writer."),
-            ("user", "{input}")
+            ("system", "You are a very powerful assistant but not great at calculating word lengths."),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
         ])
 
-        # LangChain Expression Language (LCEL)
-        chain = chat_prompt_template | self._llm | self._output_parser
-
-        out = chain.invoke({"input": "how can langsmith help with testing?"})
+        message_list = chat_prompt_template.format_messages(input="Really?", chat_history=chat_history)
+        pprint(message_list)
 
 
 if __name__ == '__main__':
