@@ -37,6 +37,19 @@ class TestLLMChain(unittest.TestCase):
     #     chain = prompt | self._llm | self._output_parser
     #     # out = chain.invoke({"product": "colorful socks"})
 
+    # def test_basic_chain(self):
+    #     chat_prompt_template = ChatPromptTemplate.from_messages([
+    #         ("system", "You are world class technical documentation writer."),
+    #         ("user", "{input}")
+    #     ])
+    #
+    #     # LangChain Expression Language (LCEL)
+    #     chain = chat_prompt_template | self._llm | self._output_parser
+    #
+    #     out = chain.invoke({"input": "how can langsmith help with testing?"})
+    #
+
+
 
 
 if __name__ == '__main__':
