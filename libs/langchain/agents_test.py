@@ -21,6 +21,22 @@ load_dotenv()
 
 
 @tool
+def get_word_in_dictionary(id: str) -> str:
+    """use this tool when you need to find a word in the dictionary using its identifier."""
+    match id:
+        case "1":
+            return "Apple"
+        case "2":
+            return "Orange"
+        case "3":
+            return "Cherry"
+        case "4":
+            return "Onion"
+        case _:
+            return "Lemon"
+
+
+@tool
 def get_word_length(word: str) -> int:
     """use this tool when you need to calculate the length of a word."""
     return len(word)
@@ -210,6 +226,19 @@ class TestAgents(unittest.TestCase):
                 ],
             }
         )
+        print(out_dict["output"])
+
+    def test_invoke_two_tools_agent(self):
+        prompt = hub.pull("hwchase17/openai-tools-agent")
+        tools = [get_word_in_dictionary, get_word_length]
+        llm = get_chat_model()
+        agent = create_openai_tools_agent(llm, tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+        out_dict = agent_executor.invoke({
+            "input": "I was given a number which equals to 3. This the id of some word in the dictionary. How many "
+                     "letters in this word?"
+        })
         print(out_dict["output"])
 
     def test_json_chat_agent(self):
