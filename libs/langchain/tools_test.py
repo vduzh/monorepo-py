@@ -152,6 +152,11 @@ class TestTools(unittest.TestCase):
         print("default JSON schema of the inputs:", custom_tool.args)
         print("return directly to the user:", custom_tool.return_direct)
 
+        result_str = custom_tool.invoke("foo")
+        self.assertEqual("LangChain", result_str)
+        result_str = custom_tool.run("foo")
+        self.assertEqual("LangChain", result_str)
+
     def test_custom_tool_with_multiple_inputs(self):
         custom_tool = multiply
 
@@ -159,6 +164,9 @@ class TestTools(unittest.TestCase):
         print("default description:", custom_tool.description)
         print("default JSON schema of the inputs:", custom_tool.args)
         print("return directly to the user:", custom_tool.return_direct)
+
+        result_int = custom_tool.invoke({"a": 10, "b": 2})
+        self.assertEqual(20, result_int)
 
     def test_custom_tool_with_subclassing_base_tool(self):
         custom_tool = CaloriesCalculatorTool()

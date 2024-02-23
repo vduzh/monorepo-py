@@ -28,7 +28,7 @@ def get_word_length(word: str) -> int:
 
 @tool
 def get_product_calories(product: str) -> int:
-    """use this tool when you need to calculate the number of calories the products contains."""
+    """use this tool when you need to calculate the number of calories a product contains."""
     return len(product * 100)
 
 
@@ -47,33 +47,26 @@ class TestAgents(unittest.TestCase):
 
     def test_simple_agent(self):
         tools = [DuckDuckGoSearchRun()]
-        agent_executor = create_conversational_retrieval_agent(
-            get_chat_model(),
-            tools,
-            verbose=True)
+        agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
 
         result = agent_executor({"input": "Manchester United vs Luton town match summary"})
         print("simple_agent:", result["output"])
 
     def test_build_agent_from_scratch_with_custom_executor(self):
         # create the prompt for the agent
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You are a very powerful assistant but not great at calculating word lengths.",
-                ),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("user", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
-            ]
-        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a very powerful assistant but not great at calculating word lengths."),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ])
 
         # create tools
         tools = {
             "get_word_length": get_word_length,
             "get_product_calories": get_product_calories,
         }
+
         # load the language model
         llm = get_chat_model()
         # bind tools to the model
@@ -84,7 +77,7 @@ class TestAgents(unittest.TestCase):
                 {
                     "input": lambda x: x["input"],
                     "agent_scratchpad": lambda x: format_to_openai_function_messages(x["intermediate_steps"]),
-                    "chat_history": lambda х: х["chat_history"],
+                    "chat_history": lambda x: x["chat_history"],
                 }
                 | prompt
                 | llm_with_tools
@@ -94,7 +87,7 @@ class TestAgents(unittest.TestCase):
         # write a runtime (agent executor) for the agent
         user_inputs = [
             "how many letters in the word educa?",
-            "How fatty is a croissant? Return the result as a number."
+            # "How fatty is a croissant? Return the result as a number."
         ]
         for user_input in user_inputs:
             chat_history = []
@@ -109,6 +102,7 @@ class TestAgents(unittest.TestCase):
                 print("agent_action:", type(agent_action))
 
                 if isinstance(agent_action, AgentFinish):
+                    # LLM combined the observations and generated the output text
                     final_result_str = agent_action.return_values["output"]
                     print("final_result:", final_result_str)
                     chat_history.extend([HumanMessage(content=user_input), AIMessage(content=final_result_str)])
@@ -120,21 +114,16 @@ class TestAgents(unittest.TestCase):
                     selected_tool = tools[agent_action.tool]
                     print(f"TOOL SELECTED: {selected_tool}")
                     observation = selected_tool.run(agent_action.tool_input)
-                    print("observation:", observation)
+                    print("observation (TOOL OUTPUT):", observation)
                     intermediate_steps.append((agent_action, observation))
 
     def test_build_agent_from_scratch_with_agent_executor(self):
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system",
-                    "You are a very powerful assistant but not great at calculating word lengths.",
-                ),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("user", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
-            ]
-        )
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a very powerful assistant but not great at calculating word lengths."),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ])
 
         tools = [get_word_length, get_product_calories]
         llm_with_tools = get_chat_model().bind(functions=[format_tool_to_openai_function(t) for t in tools])
@@ -150,17 +139,22 @@ class TestAgents(unittest.TestCase):
                 | OpenAIFunctionsAgentOutputParser()
         )
 
+        # create an agent executor
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
         user_inputs = [
             "How many letters in the word educa? Return the result as a number.",
             "How fatty is a croissant? Return the result as a number."
         ]
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
         for user_input in user_inputs:
             chat_history = []
+
             out_dict = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
-            result_str = out_dict["output"]
-            print("result:", result_str)
-            chat_history.extend([HumanMessage(content=user_input), AIMessage(content=result_str)])
+
+            llm_out_text = out_dict["output"]
+            print("result:", llm_out_text)
+
+            chat_history.extend([HumanMessage(content=user_input), AIMessage(content=llm_out_text)])
             print("chat_history:", chat_history)
 
     def test_openai_functions_agent_deprecated(self):
@@ -195,22 +189,19 @@ class TestAgents(unittest.TestCase):
         pprint(res_str["output"])
 
     def test_openai_tools_agent(self):
-        # initialize tools
-        tools = [TavilySearchResults(max_results=1)]
-
-        # create agent
         prompt = hub.pull("hwchase17/openai-tools-agent")
+
+        tools = [TavilySearchResults(max_results=1)]
         llm = get_chat_model()
         agent = create_openai_tools_agent(llm, tools, prompt)
 
-        # run agent
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-        res_str = agent_executor.invoke({"input": "what is LangChain?"})
-        pprint(res_str["output"])
+        out_dict = agent_executor.invoke({"input": "what is LangChain?"})
+        pprint(out_dict["output"])
 
-        # Run Agent with chat history
-        res_str = agent_executor.invoke(
+        # run agent with a chat history
+        out_dict = agent_executor.invoke(
             {
                 "input": "what's my name? Don't use tools to look this up unless you NEED to",
                 "chat_history": [
@@ -219,7 +210,7 @@ class TestAgents(unittest.TestCase):
                 ],
             }
         )
-        pprint(res_str["output"])
+        print(out_dict["output"])
 
     def test_json_chat_agent(self):
         # initialize tools
