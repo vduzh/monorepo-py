@@ -11,7 +11,7 @@ from langchain.agents import tool, AgentExecutor, create_openai_functions_agent,
 from langchain.agents.agent_toolkits import create_conversational_retrieval_agent
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.document_loaders import TextLoader
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
