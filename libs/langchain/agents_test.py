@@ -1,5 +1,8 @@
+import json
+import random
 import unittest
 from pprint import pprint
+from typing import List
 
 from dotenv import load_dotenv
 from langchain import hub
@@ -8,14 +11,19 @@ from langchain.agents import tool, AgentExecutor, create_openai_functions_agent,
 from langchain.agents.agent_toolkits import create_conversational_retrieval_agent
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.tools.retriever import create_retriever_tool
+from langchain_community.document_loaders import TextLoader
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.agents import AgentFinish
+from langchain_community.vectorstores.chroma import Chroma
+from langchain_core.agents import AgentFinish, AgentActionMessageLog
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.utils.function_calling import format_tool_to_openai_function
+from pydantic.v1 import Field, BaseModel
 
-from libs.langchain.model import get_chat_model
+from libs.langchain.model import get_chat_model, get_embeddings
 
 load_dotenv()
 
@@ -57,6 +65,50 @@ def get_product_calories(product: str) -> int:
 #
 #     def _arun(self, product: str) -> int:
 #         raise NotImplementedError("This tool does not support async")
+
+
+@tool
+def where_cat_is_hiding() -> str:
+    """Where is the cat hiding right now?"""
+    return random.choice(["under the bed", "on the shelf"])
+
+
+@tool
+def get_items(place: str) -> str:
+    """Use this tool to look up which items are in the given place."""
+    if "bed" in place:  # For under the bed
+        return "socks, shoes and dust bunnies"
+    if "shelf" in place:  # For 'shelf'
+        return "books, penciles and pictures"
+    else:  # if the agent decides to ask about a different place
+        return "cat snacks"
+
+
+class Response(BaseModel):
+    """Final response to the question being asked"""
+    answer: str = Field(description="The final answer to respond to the user")
+    sources: List[int] = Field(
+        description="List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information")
+
+
+def parse(output):
+    # If no function was invoked, return to user
+    if "function_call" not in output.additional_kwargs:
+        return AgentFinish(return_values={"output": output.content}, log=output.content)
+
+    # Parse out the function call
+    function_call = output.additional_kwargs["function_call"]
+    name = function_call["name"]
+    inputs = json.loads(function_call["arguments"])
+
+    # If the Response function was invoked, return to the user with the function inputs
+    if name == "Response":
+        return AgentFinish(return_values=inputs, log=str(function_call))
+    # Otherwise, return an agent action
+    else:
+        return AgentActionMessageLog(
+            tool=name, tool_input=inputs, log="", message_log=[output]
+        )
 
 
 class TestAgents(unittest.TestCase):
@@ -294,85 +346,142 @@ class TestAgents(unittest.TestCase):
             })
         pprint(res_str["output"])
 
-    #
+    def test_streaming(self):
+        # res = where_cat_is_hiding.invoke({})
+        # print(res)
+        # https://python.langchain.com/docs/modules/agents/how_to/streaming
+        raise NotImplementedError()
 
-    # def test_retrival_agent(self):
-    #     # create a retriever over some data of our own.
-    #     loader = WebBaseLoader("https://docs.smith.langchain.com/")
-    #     docs = loader.load()
-    #     vector = FAISS.from_documents(
-    #         RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs),
-    #         get_embeddings()
-    #     )
-    #     retriever = vector.as_retriever()
-    #
-    #     retriever_tool = create_retriever_tool(
-    #         retriever,
-    #         "langsmith_search",
-    #         "Search for information about LangSmith. For any questions about LangSmith, you must use this tool!",
-    #     )
-    #
-    #     # create a list of tools
-    #     tools = [retriever_tool]
-    #
-    #     # create agent
-    #     agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
-    #
-    #     q = "What is LangSmith?"
-    #     result = agent_executor({"input": q})
-    #     print("retrival_agent:", result["output"])
+    def test_return_structured_output(self):
+        # Create the Retriever
+        # load in document to retrieve over
+        documents = TextLoader("./data/state_of_the_union.txt").load()
+        # split document into chunks
+        texts = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0).split_documents(documents)
+        # here is where we add in the fake source information
+        for i, doc in enumerate(texts):
+            doc.metadata["page_chunk"] = i
+        # create our retriever
+        retriever = Chroma.from_documents(texts, get_embeddings(), collection_name="state-of-union").as_retriever()
 
-    # def test_define_tools(self):
-    #     # create search tool
-    #     search_tool = TavilySearchResults()
-    #     # res = search_tool.invoke("what is the weather in SF")
-    #
-    #     # create a retriever over some data of our own.
-    #     loader = WebBaseLoader("https://docs.smith.langchain.com/")
-    #     docs = loader.load()
-    #     vector = FAISS.from_documents(
-    #         RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs),
-    #         get_embeddings()
-    #     )
-    #     retriever = vector.as_retriever()
-    #     # res = retriever.get_relevant_documents("how to upload a dataset")[0]
-    #
-    #     retriever_tool = create_retriever_tool(
-    #         retriever,
-    #         "langsmith_search",
-    #         "Search for information about LangSmith. For any questions about LangSmith, you must use this tool!",
-    #     )
-    #     # print(retriever_tool)
-    #
-    #     # create a list of tools
-    #     tools = [search_tool, retriever_tool]
-    #
-    #     # create agent
-    #     llm = get_chat_model()
-    #
-    #     # Get the prompt to use - you can modify this!
-    #     prompt = hub.pull("hwchase17/openai-functions-agent")
-    #     print(prompt.messages)
+        # Create the tools
+        retriever_tool = create_retriever_tool(
+            retriever,
+            "state-of-union-retriever",
+            "Query a retriever to get information about state of the union address",
+        )
 
-    # def test_google_search(self):
-    #     search = GoogleSearchAPIWrapper()
-    #
-    #     search_tool = Tool(
-    #         name="Intermediate Answer",
-    #         description="Search google for recent results",
-    #         func=search.run
-    #     )
-    #
-    #     google_serach_agent = initialize_agent(
-    #         agent="self-ask-with-search",
-    #         tools=[search_tool],
-    #         llm=get_chat_model(),
-    #         verbose=True,
-    #         max_iterations=10
-    #     )
-    #
-    #     res = google_serach_agent.run("The news about langchain")
-    #     print(res)
+        # Create the custom parsing logic
+        # see parse method above
+
+        #
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", "You are a helpful assistant"),
+                ("user", "{input}"),
+                MessagesPlaceholder(variable_name="agent_scratchpad"),
+            ]
+        )
+
+        llm_with_tools = get_chat_model().bind_functions([retriever_tool, Response])
+
+        agent = (
+                {
+                    "input": lambda x: x["input"],
+                    # Format agent scratchpad from intermediate steps
+                    "agent_scratchpad": lambda x: format_to_openai_function_messages(x["intermediate_steps"]),
+                }
+                | prompt
+                | llm_with_tools
+                | parse
+        )
+
+        agent_executor = AgentExecutor(tools=[retriever_tool], agent=agent, verbose=True)
+
+        out_response = agent_executor.invoke(
+            {"input": "what did the president say about ketanji brown jackson"},
+            return_only_outputs=True,
+        )
+        pprint(out_response)
+
+
+# def test_retrival_agent(self):
+#     # create a retriever over some data of our own.
+#     loader = WebBaseLoader("https://docs.smith.langchain.com/")
+#     docs = loader.load()
+#     vector = FAISS.from_documents(
+#         RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs),
+#         get_embeddings()
+#     )
+#     retriever = vector.as_retriever()
+#
+#     retriever_tool = create_retriever_tool(
+#         retriever,
+#         "langsmith_search",
+#         "Search for information about LangSmith. For any questions about LangSmith, you must use this tool!",
+#     )
+#
+#     # create a list of tools
+#     tools = [retriever_tool]
+#
+#     # create agent
+#     agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
+#
+#     q = "What is LangSmith?"
+#     result = agent_executor({"input": q})
+#     print("retrival_agent:", result["output"])
+
+# def test_define_tools(self):
+#     # create search tool
+#     search_tool = TavilySearchResults()
+#     # res = search_tool.invoke("what is the weather in SF")
+#
+#     # create a retriever over some data of our own.
+#     loader = WebBaseLoader("https://docs.smith.langchain.com/")
+#     docs = loader.load()
+#     vector = FAISS.from_documents(
+#         RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200).split_documents(docs),
+#         get_embeddings()
+#     )
+#     retriever = vector.as_retriever()
+#     # res = retriever.get_relevant_documents("how to upload a dataset")[0]
+#
+#     retriever_tool = create_retriever_tool(
+#         retriever,
+#         "langsmith_search",
+#         "Search for information about LangSmith. For any questions about LangSmith, you must use this tool!",
+#     )
+#     # print(retriever_tool)
+#
+#     # create a list of tools
+#     tools = [search_tool, retriever_tool]
+#
+#     # create agent
+#     llm = get_chat_model()
+#
+#     # Get the prompt to use - you can modify this!
+#     prompt = hub.pull("hwchase17/openai-functions-agent")
+#     print(prompt.messages)
+
+# def test_google_search(self):
+#     search = GoogleSearchAPIWrapper()
+#
+#     search_tool = Tool(
+#         name="Intermediate Answer",
+#         description="Search google for recent results",
+#         func=search.run
+#     )
+#
+#     google_serach_agent = initialize_agent(
+#         agent="self-ask-with-search",
+#         tools=[search_tool],
+#         llm=get_chat_model(),
+#         verbose=True,
+#         max_iterations=10
+#     )
+#
+#     res = google_serach_agent.run("The news about langchain")
+#     print(res)
 
 
 if __name__ == '__main__':
