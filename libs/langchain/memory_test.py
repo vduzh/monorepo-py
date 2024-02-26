@@ -1,15 +1,18 @@
 import unittest
 from pprint import pprint
 
+from langchain.agents import ZeroShotAgent, AgentExecutor
 from langchain.chains import LLMChain, ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
 from langchain.memory import ConversationBufferWindowMemory, ConversationEntityMemory
 from langchain_community.chat_message_histories import ChatMessageHistory
+from langchain_community.utilities.google_search import GoogleSearchAPIWrapper
 from langchain_core.memory import BaseMemory
 from langchain_core.messages import BaseMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, SystemMessagePromptTemplate, MessagesPlaceholder, \
     HumanMessagePromptTemplate
+from langchain_core.tools import Tool
 
 from libs.langchain.vector_stores import get_file_vector_store
 from model import get_llm, get_chat_model
@@ -208,6 +211,57 @@ class TestMemory(unittest.TestCase):
         out_dict = chain({"input_documents": docs, "human_input": query}, return_only_outputs=True)
 
         pprint(out_dict)
+
+    def test_memory_in_agent(self):
+        # create a search tool
+        search = GoogleSearchAPIWrapper()
+        tools = [
+            Tool(
+                name="Search",
+                func=search.run,
+                description="useful for when you need to answer questions about current events",
+            )
+        ]
+
+        # build prompt
+        prefix = """
+        Have a conversation with a human, answering the following questions as best you can. 
+        You have access to the following tools:
+        """
+        suffix = """
+        Begin!"
+
+        {chat_history}
+        Question: {input}
+        {agent_scratchpad}
+        """
+
+        prompt = ZeroShotAgent.create_prompt(
+            tools,
+            prefix=prefix,
+            suffix=suffix,
+            input_variables=["input", "chat_history", "agent_scratchpad"],
+        )
+
+        # init memory
+        memory = ConversationBufferMemory(memory_key="chat_history")
+
+        # construct the LLMChain, with the Memory
+        llm_chain = LLMChain(llm=get_llm(), prompt=prompt)
+
+        # create the agent
+        agent = ZeroShotAgent(llm_chain=llm_chain, tools=tools, verbose=True)
+        agent_chain = AgentExecutor.from_agent_and_tools(
+            agent=agent, tools=tools, verbose=True, memory=memory
+        )
+
+        out_dict = agent_chain.run(input="How many people live in canada?")
+        print("step 1:", out_dict)
+
+        # the agent remembered that the previous question was about Canada,
+        # and properly asked Google Search what the name of Canada’s national anthem was.
+        out_dict = agent_chain.run(input="what is their national anthem called?")
+        print("step 2:", out_dict)
 
 
 if __name__ == '__main__':
