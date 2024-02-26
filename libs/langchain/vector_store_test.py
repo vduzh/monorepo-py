@@ -6,7 +6,7 @@ from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_community.vectorstores.docarray import DocArrayInMemorySearch
 
-from libs.langchain.model import get_embeddings
+from model import get_embeddings
 
 
 class TestVectorStore(unittest.TestCase):
