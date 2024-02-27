@@ -11,7 +11,7 @@ from langchain.agents import tool, AgentExecutor, create_openai_functions_agent,
 from langchain.agents.agent_toolkits import create_conversational_retrieval_agent
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
-from langchain.text_splitter import RecursiveCharacterTextSplitter, CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.document_loaders import TextLoader
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
@@ -20,6 +20,7 @@ from langchain_community.vectorstores.chroma import Chroma
 from langchain_core.agents import AgentFinish, AgentActionMessageLog
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.tools import Tool
 from langchain_core.utils.function_calling import format_tool_to_openai_function
 from pydantic.v1 import Field, BaseModel
 
@@ -114,11 +115,31 @@ def parse(output):
 class TestAgents(unittest.TestCase):
 
     def test_simple_agent(self):
-        tools = [DuckDuckGoSearchRun()]
-        agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
+        tools = (
+            DuckDuckGoSearchRun(),
+            Tool(
+                name="MusicSearch",
+                func=lambda x: "Michael Jackson",
+                description="useful when you need to answer questions about music"
 
-        result = agent_executor({"input": "Manchester United vs Luton town match summary"})
-        print("simple_agent:", result["output"])
+            ),
+        )
+        prompt = hub.pull("hwchase17/openai-tools-agent")
+
+        agent = create_openai_tools_agent(get_chat_model(), tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+        # use tools #1
+        res = agent_executor.invoke({"input": "Manchester United vs Luton town match summary"})
+        # pprint(res)
+
+        # use tools #2
+        res = agent_executor.invoke({"input": "Who is one of the most famous american singers?"})
+        # pprint(res)
+
+        # use llm without any tools
+        res = agent_executor.invoke({"input": "Hi! How are you? "})
+        # pprint(res)
 
     def test_build_agent_from_scratch_with_custom_executor(self):
         # create the prompt for the agent
@@ -279,6 +300,13 @@ class TestAgents(unittest.TestCase):
             }
         )
         print(out_dict["output"])
+
+    def test_create_conversational_retrieval_agent(self):
+        tools = [DuckDuckGoSearchRun()]
+        agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
+
+        result = agent_executor({"input": "Manchester United vs Luton town match summary"})
+        print("simple_agent:", result["output"])
 
     def test_invoke_two_tools_agent(self):
         prompt = hub.pull("hwchase17/openai-tools-agent")
