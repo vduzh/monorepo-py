@@ -114,7 +114,7 @@ def parse(output):
 
 class TestAgents(unittest.TestCase):
 
-    def test_simple_agent(self):
+    def test_create_agent(self):
         tools = (
             DuckDuckGoSearchRun(),
             Tool(
@@ -300,6 +300,35 @@ class TestAgents(unittest.TestCase):
             }
         )
         print(out_dict["output"])
+
+    def test_create_conversational_with_memory_agent(self):
+        # tools = [DuckDuckGoSearchRun()]
+        # prompt = hub.pull("hwchase17/openai-tools-agent")
+        #
+        # agent = create_openai_tools_agent(get_chat_model(), tools, prompt)
+        # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+        # initialize_agent
+
+        # create_react_agent
+
+        # TODO: implement
+
+        # tools = [DuckDuckGoSearchRun()]
+        # memory = ConversationBufferMemory(memory_key="chat_history")
+        #
+        # memory_key = "chat_history"
+        #
+        # agent_executor = create_openai_tools_agent(
+        #     get_chat_model(),
+        #     tools,
+        #     verbose=True,
+        #     memory=memory
+        # )
+        #
+        # result = agent_executor({"input": "hi, i am bob "})
+        # print("simple_agent:", result["output"])
+        raise NotImplementedError()
 
     def test_create_conversational_retrieval_agent(self):
         tools = [DuckDuckGoSearchRun()]
