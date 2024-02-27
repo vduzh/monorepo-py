@@ -4,6 +4,7 @@ from typing import Type, Optional
 
 from dotenv import load_dotenv
 from langchain.agents import tool
+from langchain.chains import LLMMathChain
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
 from langchain_community.tools.file_management import MoveFileTool
 from langchain_community.tools.shell import ShellTool
@@ -12,7 +13,7 @@ from langchain_community.tools.wikipedia.tool import WikipediaQueryRun
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
 from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
 from langchain_core.messages import HumanMessage
-from langchain_core.tools import BaseTool, StructuredTool
+from langchain_core.tools import BaseTool, StructuredTool, Tool
 from langchain_core.utils.function_calling import convert_to_openai_function
 from pydantic.v1 import BaseModel, Field
 
@@ -143,6 +144,20 @@ class TestTools(unittest.TestCase):
         search_tool = TavilySearchResults(max_results=1)
         results = search_tool.run("what is LangChain?")
         print("TavilySearchResults:result", results[0]["content"])
+
+    def test_tool_from_chain(self):
+        llm_math_chain = LLMMathChain(llm=get_chat_model())
+
+        chain_tool = Tool(
+            name="calculator",
+            func=llm_math_chain.run,
+            description="use it when you need to answer questions abut math",
+            # TODO: what for?
+            return_direct=True
+        )
+
+        result = chain_tool.run("what is 2*3")
+        print("llm_math_chain:result", result)
 
     def test_custom_tool_with_tool_decorator(self):
         custom_tool = search
