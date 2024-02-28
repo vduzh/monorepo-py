@@ -1,6 +1,8 @@
+import bs4
 import unittest
+from pprint import pprint
 
-from langchain_community.document_loaders import TextLoader, CSVLoader, DirectoryLoader, PyPDFLoader
+from langchain_community.document_loaders import TextLoader, CSVLoader, DirectoryLoader, PyPDFLoader, WebBaseLoader
 from langchain_core.documents import Document
 
 
@@ -44,6 +46,15 @@ class TestDocumentLoader(unittest.TestCase):
     def test_directory_loader(self):
         loader = DirectoryLoader("./data/folder/", glob="**/*.txt")
         doc_list = loader.load()
+        self.assertEqual(type(doc_list[0]), Document)
+
+    def test_web_base_loader(self):
+        loader = WebBaseLoader(
+            web_paths=("https://lilianweng.github.io/posts/2023-06-23-agent/",),
+            bs_kwargs=dict(parse_only=bs4.SoupStrainer(class_=("post-content", "post-title", "post-header")))
+        )
+        doc_list = loader.load()
+        # pprint(doc_list)
         self.assertEqual(type(doc_list[0]), Document)
 
 
