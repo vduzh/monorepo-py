@@ -2,7 +2,7 @@ from typing import Union, Sequence
 
 import bs4
 from dotenv import load_dotenv
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader, WebBaseLoader
 from langchain_community.vectorstores.chroma import Chroma
 
@@ -18,7 +18,12 @@ def build_vector_store_from_text_file(path="state_of_the_union.txt", chunk_size=
     documents = loader.load()
 
     # Break large Documents into smaller chunks
-    text_splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    # a recommended text splitter for generic text use cases
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        add_start_index=True
+    )
     chunks = text_splitter.split_documents(documents)
 
     # Store and index the splits
@@ -28,15 +33,19 @@ def build_vector_store_from_text_file(path="state_of_the_union.txt", chunk_size=
 def build_vector_store_from_urls(
         web_paths: Union[str, Sequence[str]] = "https://lilianweng.github.io/posts/2023-06-23-agent/",
         chunk_size=1000,
-        chunk_overlap=0):
+        chunk_overlap=200):
     # Load data from the ut
     loader = WebBaseLoader(
-        web_paths=web_paths,
+        web_paths=(web_paths,),
         bs_kwargs=dict(parse_only=bs4.SoupStrainer(class_=("post-content", "post-title", "post-header"))))
     documents = loader.load()
 
     # Break large Documents into smaller chunks
-    text_splitter = CharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        add_start_index=True
+    )
     chunks = text_splitter.split_documents(documents)
 
     # Store and index the splits
