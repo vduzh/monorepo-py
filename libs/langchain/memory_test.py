@@ -14,7 +14,7 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, SystemMes
     HumanMessagePromptTemplate
 from langchain_core.tools import Tool
 
-from libs.langchain.vector_stores import get_file_vector_store
+from libs.langchain.vector_stores import build_vector_store_from_text_file
 from model import get_llm, get_chat_model
 
 
@@ -182,7 +182,7 @@ class TestMemory(unittest.TestCase):
 
     def test_memory_in_multi_input_chain(self):
         # build a vector store from the state_of_the_union.txt file in the data folder
-        vectorstore = get_file_vector_store()
+        vectorstore = build_vector_store_from_text_file()
 
         query = "What did the president say about Justice Breyer"
         docs = vectorstore.similarity_search(query)

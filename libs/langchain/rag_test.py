@@ -7,7 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.tracers import ConsoleCallbackHandler
 
 from libs.langchain.model import get_llm
-from libs.langchain.vector_stores import get_file_vector_store
+from libs.langchain.vector_stores import build_vector_store_from_text_file
 
 
 # https://python.langchain.com/docs/use_cases/question_answering/
@@ -16,7 +16,7 @@ class TestRetrievalAugmentedGeneration(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # build a vector store from the state_of_the_union.txt file in the data folder
-        cls.vectorstore = get_file_vector_store()
+        cls.vectorstore = build_vector_store_from_text_file()
 
     def test_rag_with_retrieval_chain(self):
         vector_store_retriever = self.vectorstore.as_retriever()
@@ -43,7 +43,7 @@ class TestRetrievalAugmentedGeneration(unittest.TestCase):
         query = "What did the president say about Ketanji Brown Jackson?"
 
         # build a vector store from the state_of_the_union.txt file in the data folder
-        vectorstore = get_file_vector_store()
+        vectorstore = build_vector_store_from_text_file()
         docs = vectorstore.similarity_search(query)
 
         # create prompt
