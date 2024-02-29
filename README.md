@@ -13,6 +13,7 @@ https://gist.github.com/CarlosDomingues/b88df15749af23a463148bd2c2b9b3fb
 # run applications
 
 - poetry run speach-to-text
+- poetry run code_and_test_generator --language TypeScript --task "get the length of the string"
 
 # Materials
 

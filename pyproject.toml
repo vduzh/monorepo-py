@@ -11,6 +11,7 @@ packages = [
 
 [tool.poetry.scripts]
 speach-to-text = "apps.speach_to_text:main"
+code_and_test_generator = "apps.code_and_test_generator:main"
 
 [tool.poetry.dependencies]
 #python = "^3.11"
@@ -37,3 +38,7 @@ langchain-experimental = "^0.0.52"
 google-api-python-client = ">=2.100.0"
 wikipedia = "^1.4.0"
 numexpr = "^2.9.0"
+pdf2image = "^1.17.0"
+pdfminer = "^20191125"
+pdfminer-six = "^20231228"
+pillow-heif = "^0.15.0"
