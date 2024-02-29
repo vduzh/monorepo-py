@@ -24,9 +24,8 @@ class TestPromptTemplates(unittest.TestCase):
         cls._llm = None
 
     def test_create_prompt_template(self):
-        template = "What is a good name for a company that makes {product}?"
         prompt_template = PromptTemplate(
-            template=template,
+            template="What is a good name for a company that makes {product}?",
             input_variables=["product"]
         )
         # print(prompt_template)
@@ -117,19 +116,6 @@ class TestPromptTemplates(unittest.TestCase):
             pipeline_prompt_template.format(xxx="AAA", yyy="BBB"),
             "Foo: Some AAA text.Bar: Some BBB text."
         )
-
-    def test_chain(self):
-        prompt_template = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
-        runnable = {"product": lambda x: x["input"]} | prompt_template
-        print("test_chain:", runnable)
-        out = runnable.invoke({"input": "colorful socks"})
-        print("test_chain:", out)
-
-    def test_basic_chain(self):
-        prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
-        # chain = prompt | self._llm | self._output_parser
-        # out = chain.invoke({"product": "colorful socks"})
-
 
 if __name__ == '__main__':
     unittest.main()

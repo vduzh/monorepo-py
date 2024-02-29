@@ -1,8 +1,8 @@
-import bs4
 import unittest
-from pprint import pprint
 
-from langchain_community.document_loaders import TextLoader, CSVLoader, DirectoryLoader, PyPDFLoader, WebBaseLoader
+import bs4
+from langchain_community.document_loaders import TextLoader, CSVLoader, DirectoryLoader, PyPDFLoader, WebBaseLoader, \
+    UnstructuredPDFLoader
 from langchain_core.documents import Document
 
 
@@ -10,6 +10,9 @@ from langchain_core.documents import Document
 # poetry add langchain@1.0.6
 # pip add langchain-community@0.0.19
 # https://github.com/langchain-ai/langchain/issues/17514
+
+
+# https://api.python.langchain.com/en/v0.0.340/api_reference.html#module-langchain.document_loaders
 class TestDocumentLoader(unittest.TestCase):
 
     def test_text_loader(self):
@@ -34,14 +37,28 @@ class TestDocumentLoader(unittest.TestCase):
 
     def test_pdf_loader(self):
         loader = PyPDFLoader("./data/textbook.pdf")
-        doc_list = loader.load_and_split()
+        # doc_list = loader.load_and_split()
         # print(doc_list)
+
+    def test_unstructured_pdf_loader(self):
+        loader = UnstructuredPDFLoader("./data/textbook.pdf")
+        doc_list = loader.load()
+        # doc_list = loader.load_and_split()
+        print(doc_list)
 
     def test_pdf_loader_extract_images(self):
         loader = PyPDFLoader("./data/textbook.pdf", extract_images=True)
         doc_list = loader.load()
         print(doc_list)
         # self.assertEqual(type(doc_list[0]), Document)
+
+
+    def test_pdf_loader_extract_images(self):
+        loader = PyPDFLoader("./data/textbook.pdf", extract_images=True)
+        doc_list = loader.load()
+        print(doc_list)
+        # self.assertEqual(type(doc_list[0]), Document)
+
 
     def test_directory_loader(self):
         loader = DirectoryLoader("./data/folder/", glob="**/*.txt")
