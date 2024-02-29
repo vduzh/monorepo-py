@@ -12,6 +12,7 @@ packages = [
 [tool.poetry.scripts]
 speach-to-text = "apps.speach_to_text:main"
 code_and_test_generator = "apps.code_and_test_generator:main"
+chatbot = "apps.chatbot:main"
 
 [tool.poetry.dependencies]
 #python = "^3.11"
