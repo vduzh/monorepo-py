@@ -1,8 +1,8 @@
 import unittest
-from pprint import pprint
+from operator import itemgetter
 
 from langchain import hub
-from langchain.chains import LLMChain, create_retrieval_chain
+from langchain.chains import LLMChain, create_retrieval_chain, SequentialChain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
@@ -35,42 +35,87 @@ class TestChain(unittest.TestCase):
     def test_create_chain(self):
         prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
         chain = LLMChain(llm=self._llm, prompt=prompt)
-        pprint(chain)
 
-        # execute chain
-        # res = chain.run(product="colorful socks")
+        out_dict = chain.invoke({"product": "colorful socks"})
+        # pprint(out_dict)
+
+        # contains all the inputs
+        self.assertEqual("colorful socks", out_dict["product"])
+        # contains the generated result
+        self.assertIsNotNone(out_dict["text"])
+
+    def test_create_chain_with_output_key(self):
+        chain = LLMChain(
+            llm=self._llm,
+            prompt=PromptTemplate.from_template("What is a good name for a company that makes {product}?"),
+            output_key="company_name"
+        )
+
+        out_dict = chain.invoke({"product": "colorful socks"})
+        # contains the generated result under the company_name key
+        self.assertIsNotNone(out_dict["company_name"])
 
     def test_create_chain_with_lcel(self):
         prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
-        chain = prompt | self._llm | self._output_parser
-        print(chain)
+        chain = prompt | self._llm
 
-        # out = chain.invoke({"product": "colorful socks"})
+        out_str = chain.invoke({"product": "colorful socks"})
 
-    def test_reuse_chain_with_sequential(self):
-        prompt = PromptTemplate.from_template("What is a good name for a company that sells {product}?")
-        reused_chain = prompt | self._llm | self._output_parser
+        self.assertIsInstance(out_str, str)
 
-        prompt_1 = PromptTemplate.from_template("Pick up the random name of a car")
-        chain_1 = prompt_1 | self._llm | self._output_parser
+    def test_reuse_chain_with_sequential_chain(self):
+        code_chain = LLMChain(
+            llm=self._llm,
+            prompt=PromptTemplate.from_template("Write a {language} function that will {task}."),
+            output_key="code"
+        )
 
-        prompt_2 = PromptTemplate.from_template("Pick up the random name of a fruit?")
-        chain_2 = prompt_2 | self._llm | self._output_parser
+        test_chain = LLMChain(
+            llm=self._llm,
+            prompt=PromptTemplate.from_template("Write a unit-test for the following {language} code: {code}"),
+            output_key="test"
+        )
 
-        chain = chain_1 | RunnableLambda(lambda txt: {"product": txt}) | reused_chain
-        out = chain.invoke({})
-        print(out)
+        chain = SequentialChain(
+            chains=[code_chain, test_chain],
+            input_variables=["language", "task"],
+            output_variables=["code", "test"],
+        )
 
-        chain = chain_2 | RunnableLambda(lambda txt: {"product": txt}) | reused_chain
-        out = chain.invoke({})
-        print(out)
+        out = chain.invoke({"language": "python", "task": "return a list of numbers"})
+        print(">>>>>>>> GENERATED Python CODE:", out["code"])
+        print(">>>>>>>> GENERATED Python TEST:", out["test"])
+
+    # https://python.langchain.com/docs/expression_language/cookbook/multiple_chains
+    def test_reuse_chain_with_sequential_lcel(self):
+        prompt = PromptTemplate.from_template("Write a {language} function that will {task}.")
+        reused_chain = prompt | self._llm
+
+        prompt_1 = PromptTemplate.from_template("Write a unit-test for the following {language} code: {code}")
+        chain_1 = prompt_1 | self._llm
+
+        # chain = reused_chain | RunnableLambda(lambda txt: {"product": txt}) | chain_1
+        chain = (
+                {
+                    "code": reused_chain,
+                    "language": itemgetter("language")
+                }
+                | RunnableLambda(lambda data: data)
+                | {
+                    "code": itemgetter("code"),
+                    "test": chain_1
+                }
+        )
+        out_dict = chain.invoke({"language": "Java", "task": "return a list of numbers"})
+
+        print(">>>>>>>> GENERATED Java CODE:", out_dict["code"])
+        print(">>>>>>>> GENERATED Java TEST:", out_dict["test"])
 
     def test_create_stuff_documents_chain_lcel_chain(self):
         prompt = ChatPromptTemplate.from_messages(
             [("system", "What are everyone's favorite colors:\n\n{context}")]
         )
-        llm = get_llm()
-        chain = create_stuff_documents_chain(llm, prompt)
+        chain = create_stuff_documents_chain(self._llm, prompt)
 
         docs = [
             Document(page_content="Jesse loves red but not yellow"),
@@ -118,6 +163,19 @@ class TestChain(unittest.TestCase):
     #     chain = chat_prompt_template | self._llm | self._output_parser
     #
     #     out = chain.invoke({"input": "how can langsmith help with testing?"})    #
+
+    # def test_chain(self):
+    #     prompt_template = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
+    #     runnable = {"product": lambda x: x["input"]} | prompt_template
+    #     print("test_chain:", runnable)
+    #     out = runnable.invoke({"input": "colorful socks"})
+    #     print("test_chain:", out)
+    #
+    # def test_basic_chain(self):
+    #     prompt = PromptTemplate.from_template("What is a good name for a company that makes {product}?")
+    #     # chain = prompt | self._llm | self._output_parser
+    #     # out = chain.invoke({"product": "colorful socks"})
+    #
 
 
 if __name__ == '__main__':
