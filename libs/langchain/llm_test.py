@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 
 from model import get_llm
 
@@ -12,6 +13,11 @@ class TestLLM(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls._llm = None
+
+    def test__call__(self):
+        # __call__ deprecated("0.1.7", alternative="invoke", removal="0.2.0")
+        output_str = self._llm("Write a very short poem")
+        print("test_simple:", output_str)
 
     def test_invoke(self):
         input_text = "This is a test!"
