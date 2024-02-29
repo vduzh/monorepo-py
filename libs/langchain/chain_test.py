@@ -22,7 +22,7 @@ def get_documents_from_file(name: str = "state_of_the_union.txt"):
     )
 
 
-class TestLLMChain(unittest.TestCase):
+class TestChain(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._llm = get_llm()
