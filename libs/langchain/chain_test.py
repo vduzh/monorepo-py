@@ -7,10 +7,10 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores.chroma import Chroma
-from langchain_community.vectorstores.docarray import DocArrayInMemorySearch
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.runnables import RunnableLambda
 from langchain_core.tracers import ConsoleCallbackHandler
 
 from model import get_llm, get_embeddings
@@ -46,6 +46,24 @@ class TestChain(unittest.TestCase):
         print(chain)
 
         # out = chain.invoke({"product": "colorful socks"})
+
+    def test_reuse_chain_with_sequential(self):
+        prompt = PromptTemplate.from_template("What is a good name for a company that sells {product}?")
+        reused_chain = prompt | self._llm | self._output_parser
+
+        prompt_1 = PromptTemplate.from_template("Pick up the random name of a car")
+        chain_1 = prompt_1 | self._llm | self._output_parser
+
+        prompt_2 = PromptTemplate.from_template("Pick up the random name of a fruit?")
+        chain_2 = prompt_2 | self._llm | self._output_parser
+
+        chain = chain_1 | RunnableLambda(lambda txt: {"product": txt}) | reused_chain
+        out = chain.invoke({})
+        print(out)
+
+        chain = chain_2 | RunnableLambda(lambda txt: {"product": txt}) | reused_chain
+        out = chain.invoke({})
+        print(out)
 
     def test_create_stuff_documents_chain_lcel_chain(self):
         prompt = ChatPromptTemplate.from_messages(
