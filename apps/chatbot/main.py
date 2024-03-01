@@ -17,7 +17,7 @@ def main():
     llm = ChatOpenAI()
 
     # TODO: place to separate folder
-    chat_memory = FileChatMessageHistory("message.json")
+    chat_memory = FileChatMessageHistory("./tmp/message.json")
 
     # Render previous messages
     for message in chat_memory.messages:
@@ -42,10 +42,9 @@ def main():
         ]
     )
 
+    # build a chain
     chain = (
-            RunnablePassthrough.assign(
-                messages=RunnableLambda(memory.load_memory_variables) | itemgetter("messages")
-            )
+            RunnablePassthrough.assign(messages=RunnableLambda(memory.load_memory_variables) | itemgetter("messages"))
             | chat_prompt_template
             | llm
     )
