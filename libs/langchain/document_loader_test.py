@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 
 import bs4
 from langchain_community.document_loaders import TextLoader, CSVLoader, DirectoryLoader, PyPDFLoader, WebBaseLoader, \
@@ -18,7 +19,15 @@ class TestDocumentLoader(unittest.TestCase):
     def test_text_loader(self):
         loader = TextLoader("./data/some_text.txt")
         doc_list = loader.load()
-        self.assertEqual(type(doc_list[0]), Document)
+        doc = doc_list[0]
+
+        self.assertEqual(type(doc), Document)
+
+        self.assertIsNotNone(doc.page_content)
+        print(">>> CONTENT: \n", doc.page_content[0:50], "...")
+
+        self.assertIsNotNone(doc.metadata)
+        print(">>> META-DATA: \n", doc.metadata)
 
     def test_csv_loader(self):
         loader = CSVLoader(file_path='./data/some_data.csv')
@@ -52,13 +61,11 @@ class TestDocumentLoader(unittest.TestCase):
         print(doc_list)
         # self.assertEqual(type(doc_list[0]), Document)
 
-
     def test_pdf_loader_extract_images(self):
         loader = PyPDFLoader("./data/textbook.pdf", extract_images=True)
         doc_list = loader.load()
         print(doc_list)
         # self.assertEqual(type(doc_list[0]), Document)
-
 
     def test_directory_loader(self):
         loader = DirectoryLoader("./data/folder/", glob="**/*.txt")
