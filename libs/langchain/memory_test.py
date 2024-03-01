@@ -5,7 +5,7 @@ from langchain.agents import ZeroShotAgent, AgentExecutor
 from langchain.chains import LLMChain, ConversationChain
 from langchain.chains.conversation.memory import ConversationBufferMemory
 from langchain.chains.question_answering import load_qa_chain
-from langchain.memory import ConversationBufferWindowMemory, ConversationEntityMemory
+from langchain.memory import ConversationBufferWindowMemory, ConversationEntityMemory, ConversationSummaryMemory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_community.utilities.google_search import GoogleSearchAPIWrapper
 from langchain_core.memory import BaseMemory
@@ -104,6 +104,12 @@ class TestMemory(unittest.TestCase):
 
         text = conversation.predict(input="Is it going well?")
         print("step #2:", text)
+
+    def test_conversation_summary_memory(self):
+        # https://python.langchain.com/docs/modules/memory/types/summary
+        memory = ConversationSummaryMemory()
+        raise NotImplementedError()
+
 
     def test_entity_not_finished_yet(self):
         memory = ConversationEntityMemory(llm=get_llm())
