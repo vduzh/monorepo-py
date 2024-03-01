@@ -19,13 +19,13 @@ class TestDocumentLoader(unittest.TestCase):
     def test_text_loader(self):
         loader = TextLoader("./data/some_text.txt")
         doc_list = loader.load()
+        print(">>> DOCS:")
+        pprint(doc_list)
+
         doc = doc_list[0]
-
         self.assertEqual(type(doc), Document)
-
         self.assertIsNotNone(doc.page_content)
         print(">>> CONTENT: \n", doc.page_content[0:50], "...")
-
         self.assertIsNotNone(doc.metadata)
         print(">>> META-DATA: \n", doc.metadata)
 
