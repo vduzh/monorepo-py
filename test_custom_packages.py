@@ -1,5 +1,5 @@
 # import apps
 # print(dir(apps))
 
-from apps.speach_to_text import main
+from apps.llm_speach_to_text import main
 main()
