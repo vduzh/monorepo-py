@@ -10,3 +10,9 @@ info/
 .env
 cache
 
+# tmp files
+# exclude everything
+**/tmp/*
+# exception to the rule
+!**/tmp/.gitkeep
+
