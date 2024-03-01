@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -92,6 +93,16 @@ class TestLCEL(unittest.TestCase):
         # invoke the chain
         out = chain.invoke({"topic": "ice cream"})
         print(out)
+
+    def test_use_custom_function_with_runnable_lambda(self):
+        def custom_function(single_arg: dict):
+            return len(single_arg["input"])
+
+        chain = RunnableLambda(custom_function)
+        out_num = chain.invoke({"input": "test"})
+        self.assertEqual(4, out_num)
+
+
 
 
 if __name__ == '__main__':
