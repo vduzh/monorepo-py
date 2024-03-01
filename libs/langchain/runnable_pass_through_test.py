@@ -13,7 +13,7 @@ class TestRunnablePassthrough(unittest.TestCase):
                 RunnableLambda(lambda data: data.get('passed'))
         )
 
-        res = runnable.invoke({"foo": "test"})
+        res = runnable.invoke({"foo": "data 1", "bar": "data 2"})
         print("passed:", res)
 
     def test_pass_through_with_assign(self):
