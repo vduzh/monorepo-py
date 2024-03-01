@@ -15,6 +15,7 @@ https://gist.github.com/CarlosDomingues/b88df15749af23a463148bd2c2b9b3fb
 - poetry run llm_speach_to_text
 - poetry run llm_code_and_test_generator --language TypeScript --task "get the length of the string"
 - poetry run llm_chatbot
+- poetry run llm_rag_facts
 
 # Materials
 

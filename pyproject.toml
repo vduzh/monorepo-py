@@ -13,6 +13,7 @@ packages = [
 llm_speach-to-text = "apps.llm_speach_to_text:main"
 llm_code_and_test_generator = "apps.llm_code_and_test_generator:main"
 llm_chatbot = "apps.llm_chatbot:main"
+llm_rag_facts = "apps.llm_rag_facts:main"
 
 [tool.poetry.dependencies]
 #python = "^3.11"
