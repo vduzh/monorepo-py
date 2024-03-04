@@ -4,9 +4,11 @@ from pprint import pprint
 from langchain import hub
 from langchain.chains import create_retrieval_chain, LLMChain, RetrievalQA
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.globals import set_debug, get_debug
 from langchain_core.prompts import PromptTemplate
 from langchain_core.tracers import ConsoleCallbackHandler
 
+from libs import langchain
 from libs.langchain.model import get_llm, get_chat_model
 from libs.langchain.vector_stores import build_vector_store_from_text_file, build_vector_store_from_urls
 
@@ -84,6 +86,96 @@ class TestRetrievalAugmentedGeneration(unittest.TestCase):
 
         # cleanup
         vectorstore.delete_collection()
+
+    def test_qa_with_retrieval_qa_and_chain_type_stuff(self):
+        # chatgpt i langchain polnyy master klass dlya razrabotchikov 33
+
+        old_debug = get_debug()
+        set_debug(True)
+
+        vectorstore = build_vector_store_from_urls()
+        retriever = vectorstore.as_retriever()
+
+        qa_chain = RetrievalQA.from_chain_type(
+            get_chat_model(),
+            retriever=retriever,
+            chain_type="stuff"
+        )
+
+        result = qa_chain("What are the approaches to Task Decomposition?")
+        # print(result)
+
+        # cleanup
+        vectorstore.delete_collection()
+        set_debug(old_debug)
+
+    def test_qa_with_retrieval_qa_and_chain_type_map_reduce(self):
+        # chatgpt i langchain polnyy master klass dlya razrabotchikov 33
+
+        old_debug = get_debug()
+        set_debug(True)
+
+        # chatgpt i langchain polnyy master klass dlya razrabotchikov 33
+        vectorstore = build_vector_store_from_urls()
+        retriever = vectorstore.as_retriever()
+
+        qa_chain = RetrievalQA.from_chain_type(
+            get_chat_model(),
+            retriever=retriever,
+            chain_type="map_reduce",
+            verbose=True
+        )
+
+        result = qa_chain("What are the approaches to Task Decomposition?")
+        pprint(result)
+
+        # cleanup
+        vectorstore.delete_collection()
+        set_debug(old_debug)
+
+    def test_qa_with_retrieval_qa_and_chain_type_map_re_rank(self):
+        # chatgpt i langchain polnyy master klass dlya razrabotchikov 33
+        old_debug = get_debug()
+        set_debug(True)
+
+        vectorstore = build_vector_store_from_urls()
+        retriever = vectorstore.as_retriever()
+
+        qa_chain = RetrievalQA.from_chain_type(
+            get_chat_model(),
+            retriever=retriever,
+            chain_type="map_rerank",
+            verbose=True
+        )
+
+        result = qa_chain("What are the approaches to Task Decomposition?")
+        pprint(result)
+
+        # cleanup
+        vectorstore.delete_collection()
+        set_debug(old_debug)
+
+    def test_qa_with_retrieval_qa_and_chain_type_refine(self):
+        # ch course chatgpt-i-langchain-polnyy-master-klass-dlya-razrabotchikov?lesson=33
+        old_debug = get_debug()
+        set_debug(True)
+
+        vectorstore = build_vector_store_from_urls()
+        retriever = vectorstore.as_retriever()
+
+        qa_chain = RetrievalQA.from_chain_type(
+            get_chat_model(),
+            retriever=retriever,
+            chain_type="refine",
+            verbose=True
+        )
+
+        result = qa_chain("What are the approaches to Task Decomposition?")
+        pprint(result)
+
+        # cleanup
+        vectorstore.delete_collection()
+        set_debug(old_debug)
 
     def test_rag_with_llm_not_finished_yet(self):
         query = "What did the president say about Ketanji Brown Jackson?"
