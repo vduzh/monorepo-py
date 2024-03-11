@@ -1,20 +1,19 @@
 from operator import itemgetter
-from pprint import pprint
 
 from dotenv import load_dotenv
 from langchain.memory import ConversationBufferMemory
 from langchain_community.chat_message_histories import FileChatMessageHistory
-
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain_openai import ChatOpenAI
+
+from apps.llm_chatbot.llm_utils import get_chat_model
 
 # Load environment variables from .env file
 load_dotenv()
 
 
 def main():
-    llm = ChatOpenAI()
+    llm = get_chat_model()
 
     # TODO: place to separate folder
     chat_memory = FileChatMessageHistory("./tmp/message.json")
