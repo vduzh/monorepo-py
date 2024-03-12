@@ -15,8 +15,12 @@ class TestChatPromptTemplates(unittest.TestCase):
             ("system", template),
             ("human", human_template)
         ])
-        message_list = chat_prompt_template.format_messages(input_language="English", output_language="French",
-                                                            text="I love programming.")
+
+        message_list = chat_prompt_template.format_messages(
+            input_language="English",
+            output_language="French",
+            text="I love programming."
+        )
 
         self.assertIs(type(message_list), list)
 
@@ -35,6 +39,7 @@ class TestChatPromptTemplates(unittest.TestCase):
             SystemMessage(content=content),
             HumanMessagePromptTemplate.from_template(human_template)
         ])
+
         message_list = chat_prompt_template.format_messages(text="I love programming.")
 
         self.assertIs(type(message_list), list)
@@ -89,8 +94,9 @@ class TestChatPromptTemplates(unittest.TestCase):
         message_list = chat_prompt_template.format_messages(input="i said hi!")
         # print(message_list)
 
-    def test_create_prompt_wit_messages_placeholder(self):
-        chat_history = [
+    def test_create_prompt_with_messages_placeholder(self):
+        # to be inserted into a message list by the MessagesPlaceholder
+        chat_history_lst = [
             HumanMessage(content='How many letters in the word educa? Return the result as a number.'),
             AIMessage(content='The word "educa" has 5 letters.')
         ]
@@ -101,8 +107,18 @@ class TestChatPromptTemplates(unittest.TestCase):
             ("user", "{input}"),
         ])
 
-        message_list = chat_prompt_template.format_messages(input="Really?", chat_history=chat_history)
+        message_list = chat_prompt_template.format_messages(
+            input="Really?",
+            chat_history=chat_history_lst
+        )
         pprint(message_list)
+
+        self.assertEqual(4, len(message_list))
+        self.assertIsInstance(message_list[0], SystemMessage)
+        self.assertIsInstance(message_list[1], HumanMessage)
+        self.assertIsInstance(message_list[2], AIMessage)
+        self.assertEqual('The word "educa" has 5 letters.', message_list[2].content)
+        self.assertIsInstance(message_list[3], HumanMessage)
 
 
 if __name__ == '__main__':
