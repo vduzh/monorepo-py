@@ -1,3 +1,4 @@
+import json
 import unittest
 from pprint import pprint
 from typing import Type, Optional
@@ -5,6 +6,7 @@ from typing import Type, Optional
 from dotenv import load_dotenv
 from langchain.agents import tool
 from langchain.chains import LLMMathChain
+from langchain.globals import set_debug
 from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
 from langchain_community.tools.file_management import MoveFileTool
 from langchain_community.tools.shell import ShellTool
@@ -12,6 +14,7 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools.wikipedia.tool import WikipediaQueryRun
 from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
 from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackManagerForToolRun
+from langchain_core.globals import get_debug
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import BaseTool, StructuredTool, Tool
 from langchain_core.utils.function_calling import convert_to_openai_function
@@ -44,6 +47,13 @@ load_dotenv()
 
 
 class TestTools(unittest.TestCase):
+    def setUp(self):
+        self.current_debug = get_debug()
+        set_debug(True)
+
+    def tearDown(self):
+        set_debug(self.current_debug)
+
     def test_custom_tool_from_function_with_tool_class(self):
         # define custom function
         def say_hello(name: str) -> str:
@@ -120,13 +130,13 @@ class TestTools(unittest.TestCase):
 
         print("default name:", custom_tool.name)
         print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
+        print("default JSON schema of the inputs:", json.dumps(custom_tool.args, indent=2))
         print("return directly to the user:", custom_tool.return_direct)
 
         result_int = custom_tool.invoke({"a": 10, "b": 2})
         self.assertEqual(20, result_int)
 
-    def test_custom_tool_with_structured_tool_dataclass(self):
+    def test_custom_tool_with_multiple_inputs_with_structured_tool_dataclass(self):
         def say_hello(name: str) -> str:
             """Greets a person."""
             return f"Hello {name}!"
@@ -139,7 +149,7 @@ class TestTools(unittest.TestCase):
 
         print("default name:", custom_tool.name)
         print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
+        print("default JSON schema of the inputs:", json.dumps(custom_tool.args, indent=2))
         print("return directly to the user:", custom_tool.return_direct)
 
         res_str = custom_tool.run("John")
