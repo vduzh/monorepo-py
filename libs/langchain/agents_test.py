@@ -42,73 +42,66 @@ def get_product_calories(product: str) -> int:
     return len(product * 100)
 
 
-# class CaloriesCalculatorTool(BaseTool):
-#     name = "Calories calculator"
-#     description = "use this tool when you need to calculate the amount of calories a product contains."
-#
-#     def _run(self, product: str) -> int:
-#         return len(product * 100)
-#
-#     def _arun(self, product: str) -> int:
-#         raise NotImplementedError("This tool does not support async")
+class TestAgents(unittest.TestCase):
 
+    def test_agent_idea_without_lcel(self):
+        # third-party code
+        def run_sqlite_query(query):
+            conn = sqlite3.connect("./data/db.sqlite")
+            try:
+                c = conn.cursor()
+                c.execute(query)
+                return c.fetchall()
+            except sqlite3.OperationalError as err:
+                return f"the following error occurred: {str(err)}"
+            finally:
+                conn.close()
 
-@tool
-def get_items(place: str) -> str:
-    """Use this tool to look up which items are in the given place."""
-    if "bed" in place:  # For under the bed
-        return "socks, shoes and dust bunnies"
-    if "shelf" in place:  # For 'shelf'
-        return "books, penciles and pictures"
-    else:  # if the agent decides to ask about a different place
-        return "cat snacks"
-
-
-class Response(BaseModel):
-    """Final response to the question being asked"""
-    answer: str = Field(description="The final answer to respond to the user")
-    sources: List[int] = Field(
-        description="List of page chunks that contain answer to the question. Only include a page chunk if it contains relevant information")
-
-
-def parse(output):
-    # If no function was invoked, return to user
-    if "function_call" not in output.additional_kwargs:
-        return AgentFinish(return_values={"output": output.content}, log=output.content)
-
-    # Parse out the function call
-    function_call = output.additional_kwargs["function_call"]
-    name = function_call["name"]
-    inputs = json.loads(function_call["arguments"])
-
-    # If the Response function was invoked, return to the user with the function inputs
-    if name == "Response":
-        return AgentFinish(return_values=inputs, log=str(function_call))
-    # Otherwise, return an agent action
-    else:
-        return AgentActionMessageLog(
-            tool=name, tool_input=inputs, log="", message_log=[output]
+        # build a tool from the function above
+        run_query_tool = Tool.from_function(
+            name="run_sqlite_query",
+            description="Run SQLite query",
+            func=run_sqlite_query
         )
 
+        # compose the tool list
+        tools = [run_query_tool]
 
-def run_sqlite_query(query):
-    conn = sqlite3.connect("./data/db.sqlite")
-    try:
-        c = conn.cursor()
-        c.execute(query)
-        return c.fetchall()
-    finally:
-        conn.close()
+        # create a prompt template
+        prompt = ChatPromptTemplate.from_messages([
+            HumanMessagePromptTemplate.from_template("{input}"),
+            # keeps the intermediate steps that filled in by the agent
+            MessagesPlaceholder(variable_name="agent_scratchpad")
+        ])
 
+        # Agent is a chain that knows how to use tools
+        # - takes the list of tools and covert them into JSON function description for ChatGPT
+        agent = OpenAIFunctionsAgent(
+            llm=get_chat_model(),
+            prompt=prompt,
+            tools=tools,
+        )
 
-run_query_tool = Tool.from_function(
-    name="run_sqlite_query",
-    description="Run SQLite query",
-    func=run_sqlite_query
-)
+        # AgentExecutor takes an agent and runs until the response is NOT a function call
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True
+        )
 
+        # handle the correct llm response
+        res = agent_executor.invoke({"input": "How many users in the database?"})
+        # pprint(res)
 
-class TestAgents(unittest.TestCase):
+        # handle the incorrect llm response to be corrected by LLM
+        res = agent_executor.invoke({"input": "How many users have provided a shipping address?"})
+        # pprint(res)
+
+        # handle the totally incorrect llm response
+        with self.assertRaises(Exception) as context:
+            agent_executor.invoke({"input": "How many contacts in the database?"})
+
+        self.assertTrue('no such table: contacts' in context.exception.args[0])
 
     def test_create_agent(self):
         tools = (
@@ -145,34 +138,6 @@ class TestAgents(unittest.TestCase):
         # use llm without any tools
         res = agent_executor.invoke({"input": "Hi! How are you? "})
         # pprint(res)
-
-    def test_agent_idea(self):
-        tools = [run_query_tool]
-
-        prompt = ChatPromptTemplate.from_messages([
-            HumanMessagePromptTemplate.from_template("{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad")
-        ])
-
-        agent = OpenAIFunctionsAgent(
-            llm=get_chat_model(),
-            prompt=prompt,
-            tools=tools,
-        )
-
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=True
-        )
-
-        res = agent_executor.invoke({"input": "How many users in the database?"})
-        # pprint(res)
-
-        with self.assertRaises(Exception) as context:
-            agent_executor.invoke({"input": "How many contacts in the database?"})
-
-        self.assertTrue('no such table: contacts' in context.exception.args[0])
 
     def test_build_agent_from_scratch_with_custom_executor(self):
         # create the prompt for the agent
@@ -463,6 +428,32 @@ class TestAgents(unittest.TestCase):
         raise NotImplementedError()
 
     def test_return_structured_output(self):
+        class Response(BaseModel):
+            """Final response to the question being asked"""
+            answer: str = Field(description="The final answer to respond to the user")
+            sources: List[int] = Field(
+                description="List of page chunks that contain answer to the question. Only include a page chunk if it "
+                            "contains relevant information")
+
+        def parse(output):
+            # If no function was invoked, return to user
+            if "function_call" not in output.additional_kwargs:
+                return AgentFinish(return_values={"output": output.content}, log=output.content)
+
+            # Parse out the function call
+            function_call = output.additional_kwargs["function_call"]
+            name = function_call["name"]
+            inputs = json.loads(function_call["arguments"])
+
+            # If the Response function was invoked, return to the user with the function inputs
+            if name == "Response":
+                return AgentFinish(return_values=inputs, log=str(function_call))
+            # Otherwise, return an agent action
+            else:
+                return AgentActionMessageLog(
+                    tool=name, tool_input=inputs, log="", message_log=[output]
+                )
+
         # Create the Retriever
         # load in document to retrieve over
         documents = TextLoader("./data/state_of_the_union.txt").load()
