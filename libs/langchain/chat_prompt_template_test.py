@@ -107,6 +107,12 @@ class TestChatPromptTemplates(unittest.TestCase):
             ("user", "{input}"),
         ])
 
+        self.assertTrue(all(
+            item in ["chat_history", "input"] for item in chat_prompt_template.input_variables
+        ))
+
+        pprint(chat_prompt_template.input_variables)
+
         message_list = chat_prompt_template.format_messages(
             input="Really?",
             chat_history=chat_history_lst
