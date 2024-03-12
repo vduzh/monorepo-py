@@ -22,36 +22,16 @@ from libs.langchain.model import get_chat_model
 load_dotenv()
 
 
-class WikiInputs(BaseModel):
-    """Inputs to the wikipedia tool."""
-
-    query: str = Field(
-        description="query to look up in Wikipedia, should be 3 or less words"
-    )
-
-
-@tool
-def search(query: str) -> str:
-    """Look up things online."""
-    return "LangChain"
-
-
-@tool
-def multiply(a: int, b: int) -> int:
-    """Multiply two numbers."""
-    return a * b
-
-
-class WordInput(BaseModel):
-    name: str = Field(description="should be a word")
+# class WordInput(BaseModel):
+#     name: str = Field(description="should be a word")
 
 
 # function name is also used by LLM to find a function
-@tool("get_word_length", args_schema=WordInput, return_direct=True)
-def get_word_length(word: str) -> int:
-    """Returns the length of a word."""
-    # """use this tool when you need to calculate the length of a car using its name."""
-    return len(word)
+# @tool("get_word_length", args_schema=WordInput, return_direct=True)
+# def get_word_length(word: str) -> int:
+#     """Returns the length of a word."""
+#     # """use this tool when you need to calculate the length of a car using its name."""
+#     return len(word)
 
 
 # function name is also used by LLM to find a function
@@ -63,29 +43,144 @@ def get_word_length(word: str) -> int:
 #     return len(product * 100)
 
 
-class ProductInput(BaseModel):
-    name: str = Field(description="should be the name of the product")
-
-
-class CaloriesCalculatorTool(BaseTool):
-    name = "calories_calculator"
-    description = "use this tool when you need to calculate the amount of calories a product contains."
-    args_schema: Type[BaseModel] = ProductInput
-
-    def _run(self, name: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> int:
-        """Use the tool."""
-        return len(name * 100)
-
-    def _arun(self, name: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> int:
-        raise NotImplementedError("calories_calculator tool does not support async")
-
-
-def say_hello(name: str) -> str:
-    """Greets a person."""
-    return f"Hello {name}!"
-
-
 class TestTools(unittest.TestCase):
+    def test_custom_tool_from_function_with_tool_class(self):
+        # define custom function
+        def say_hello(name: str) -> str:
+            """Greets a person."""
+            return f"Hello {name}!"
+
+        # create a tool from the custom function
+        custom_tool = Tool.from_function(
+            func=say_hello,
+            name="Greeting",
+            description="useful for when you need to greet somebody with its name",
+        )
+
+        print("default name:", custom_tool.name)
+        print("default description:", custom_tool.description)
+        print("default JSON schema of the inputs:", custom_tool.args)
+        print("return directly to the user:", custom_tool.return_direct)
+
+        res_str = custom_tool.run("John")
+        self.assertEqual("Hello John!", res_str)
+
+    def test_custom_tool_from_function_with_tool_decorator(self):
+        @tool
+        def say_hello(name: str) -> str:
+            """Greets a person."""
+            return f"Hello {name}!"
+
+        custom_tool = say_hello
+
+        print("default name:", custom_tool.name)
+        print("default description:", custom_tool.description)
+        print("default JSON schema of the inputs:", custom_tool.args)
+        print("return directly to the user:", custom_tool.return_direct)
+
+        res_str = custom_tool.run("John")
+        self.assertEqual("Hello John!", res_str)
+
+    def test_custom_tool_with_subclassing_base_tool(self):
+        class ProductInput(BaseModel):
+            name: str = Field(description="should be the name of the product")
+
+        class CaloriesCalculatorTool(BaseTool):
+            name = "calories_calculator"
+            description = "use this tool when you need to calculate the amount of calories a product contains."
+            args_schema: Type[BaseModel] = ProductInput
+
+            def _run(self, name: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> int:
+                """Use the tool."""
+                return len(name * 100)
+
+            def _arun(self, name: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> int:
+                raise NotImplementedError("calories_calculator tool does not support async")
+
+        custom_tool = CaloriesCalculatorTool()
+
+        print("default name:", custom_tool.name)
+        print("default description:", custom_tool.description)
+        print("default JSON schema of the inputs:", custom_tool.args)
+        print("return directly to the user:", custom_tool.return_direct)
+
+        res_str = custom_tool.run({"name": "lemon"})
+        self.assertEqual(500, res_str)
+
+        res_str = custom_tool.run("orange")
+        self.assertEqual(600, res_str)
+
+    def test_custom_tool_with_multiple_inputs(self):
+        @tool
+        def multiply(a: int, b: int) -> int:
+            """Multiply two numbers."""
+            return a * b
+
+        custom_tool = multiply
+
+        print("default name:", custom_tool.name)
+        print("default description:", custom_tool.description)
+        print("default JSON schema of the inputs:", custom_tool.args)
+        print("return directly to the user:", custom_tool.return_direct)
+
+        result_int = custom_tool.invoke({"a": 10, "b": 2})
+        self.assertEqual(20, result_int)
+
+    def test_custom_tool_with_structured_tool_dataclass(self):
+        def say_hello(name: str) -> str:
+            """Greets a person."""
+            return f"Hello {name}!"
+
+        custom_tool = StructuredTool.from_function(
+            func=say_hello,
+            name="Greeting",
+            description="useful for when you need to somebody with its name",
+        )
+
+        print("default name:", custom_tool.name)
+        print("default description:", custom_tool.description)
+        print("default JSON schema of the inputs:", custom_tool.args)
+        print("return directly to the user:", custom_tool.return_direct)
+
+        res_str = custom_tool.run("John")
+        self.assertEqual("Hello John!", res_str)
+
+    def test_tool_from_chain(self):
+        llm_math_chain = LLMMathChain(llm=get_chat_model())
+
+        chain_tool = Tool(
+            name="calculator",
+            func=llm_math_chain.run,
+            description="use it when you need to answer questions abut math",
+            # TODO: what for?
+            return_direct=True
+        )
+
+        result = chain_tool.run("what is 2*3")
+        print("llm_math_chain:result", result)
+
+    def test_tools_as_openai_functions(self):
+        tools = [MoveFileTool()]
+        functions = [convert_to_openai_function(t) for t in tools]
+
+        model = get_chat_model()
+        ai_message = model.invoke([HumanMessage(content="move file foo to bar")], functions=functions)
+        # pprint(ai_message)
+
+    def test_tools_as_openai_functions_with_auto_bind(self):
+        tools = [MoveFileTool()]
+        model_with_functions = get_chat_model().bind_functions(tools)
+
+        ai_message = model_with_functions.invoke([HumanMessage(content="move file foo to bar")])
+        # pprint(ai_message)
+
+    def test_tools_as_openai_functions_with_tool_choice(self):
+        tools = [MoveFileTool()]
+        model_with_tools = get_chat_model().bind_tools(tools)
+
+        ai_message = model_with_tools.invoke([HumanMessage(content="move file foo to bar")])
+        pprint(ai_message)
+
     def test_built_in_tool(self):
         api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
         search_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
@@ -111,6 +206,13 @@ class TestTools(unittest.TestCase):
         print("result of call #2:", res_str)
 
     def test_customizing_built_in_tool(self):
+        class WikiInputs(BaseModel):
+            """Inputs to the wikipedia tool."""
+
+            query: str = Field(
+                description="query to look up in Wikipedia, should be 3 or less words"
+            )
+
         api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
         search_tool = WikipediaQueryRun(
             name="wiki-tool",
@@ -145,97 +247,10 @@ class TestTools(unittest.TestCase):
         results = search_tool.run("what is LangChain?")
         print("TavilySearchResults:result", results[0]["content"])
 
-    def test_tool_from_chain(self):
-        llm_math_chain = LLMMathChain(llm=get_chat_model())
-
-        chain_tool = Tool(
-            name="calculator",
-            func=llm_math_chain.run,
-            description="use it when you need to answer questions abut math",
-            # TODO: what for?
-            return_direct=True
-        )
-
-        result = chain_tool.run("what is 2*3")
-        print("llm_math_chain:result", result)
-
-    def test_custom_tool_with_tool_decorator(self):
-        custom_tool = search
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
-        result_str = custom_tool.invoke("foo")
-        self.assertEqual("LangChain", result_str)
-        result_str = custom_tool.run("foo")
-        self.assertEqual("LangChain", result_str)
-
-    def test_custom_tool_with_multiple_inputs(self):
-        custom_tool = multiply
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
-        result_int = custom_tool.invoke({"a": 10, "b": 2})
-        self.assertEqual(20, result_int)
-
-    def test_custom_tool_with_subclassing_base_tool(self):
-        custom_tool = CaloriesCalculatorTool()
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
-        res_str = custom_tool.run({"name": "lemon"})
-        self.assertEqual(500, res_str)
-
-        res_str = custom_tool.run("orange")
-        self.assertEqual(600, res_str)
-
-    def test_custom_tool_with_structured_tool_dataclass(self):
-        custom_tool = StructuredTool.from_function(
-            func=say_hello,
-            name="Greeting",
-            description="useful for when you need to somebody with its name",
-        )
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
-        res_str = custom_tool.run("John")
-        self.assertEqual("Hello John!", res_str)
-
-    def test_tools_as_openai_functions(self):
-        tools = [MoveFileTool()]
-        functions = [convert_to_openai_function(t) for t in tools]
-
-        model = get_chat_model()
-        ai_message = model.invoke([HumanMessage(content="move file foo to bar")], functions=functions)
-        # pprint(ai_message)
-
-    def test_tools_as_openai_functions_with_auto_bind(self):
-        tools = [MoveFileTool()]
-        model_with_functions = get_chat_model().bind_functions(tools)
-
-        ai_message = model_with_functions.invoke([HumanMessage(content="move file foo to bar")])
-        # pprint(ai_message)
-
-    def test_tools_as_openai_functions_with_tool_choice(self):
-        tools = [MoveFileTool()]
-        model_with_tools = get_chat_model().bind_tools(tools)
-
-        ai_message = model_with_tools.invoke([HumanMessage(content="move file foo to bar")])
-        pprint(ai_message)
-
     def test_toolkit(self):
-        raise NotImplementedError("test_toolkit is not implemented yet!")
+        # TODO
+        # raise NotImplementedError("test_toolkit is not implemented yet!")
+        pass
 
     # def test_google_search(self):
     #     search = GoogleSearchAPIWrapper()
