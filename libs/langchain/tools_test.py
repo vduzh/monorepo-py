@@ -17,7 +17,7 @@ from langchain_core.callbacks import CallbackManagerForToolRun, AsyncCallbackMan
 from langchain_core.globals import get_debug
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import BaseTool, StructuredTool, Tool
-from langchain_core.utils.function_calling import convert_to_openai_function
+from langchain_core.utils.function_calling import convert_to_openai_function, format_tool_to_openai_function
 from pydantic.v1 import BaseModel, Field
 
 from libs.langchain.model import get_chat_model
@@ -183,6 +183,11 @@ class TestTools(unittest.TestCase):
 
         result = chain_tool.run("what is 2*3")
         print(result)
+
+    def test_format_tool_to_openai_function(self):
+        test_tool = MoveFileTool()
+        openai_func = format_tool_to_openai_function(test_tool)
+        print(json.dumps(openai_func, indent=2))
 
     def test_tools_as_openai_functions(self):
         tools = [MoveFileTool()]
