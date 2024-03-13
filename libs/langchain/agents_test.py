@@ -6,12 +6,15 @@ from pprint import pprint
 from typing import List
 
 from dotenv import load_dotenv
+from faker import Faker
 from langchain import hub
 from langchain.agents import tool, AgentExecutor, create_openai_functions_agent, create_openai_tools_agent, \
     create_json_chat_agent, create_structured_chat_agent, OpenAIFunctionsAgent
 from langchain.agents.agent_toolkits import create_conversational_retrieval_agent
 from langchain.agents.format_scratchpad import format_to_openai_function_messages
 from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
+from langchain.globals import get_debug
+from langchain.memory import ConversationBufferMemory
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools.retriever import create_retriever_tool
 from langchain_community.document_loaders import TextLoader
@@ -19,6 +22,7 @@ from langchain_community.tools.ddg_search import DuckDuckGoSearchRun
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.vectorstores.chroma import Chroma
 from langchain_core.agents import AgentFinish, AgentActionMessageLog
+from langchain_core.globals import set_debug
 from langchain_core.messages import HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
 from langchain_core.tools import Tool
@@ -28,6 +32,46 @@ from pydantic.v1 import Field, BaseModel
 from libs.langchain.model import get_chat_model, get_embeddings
 
 load_dotenv()
+
+
+# executes a query in SQLite db
+def run_sqlite_query(query):
+    conn = sqlite3.connect("./data/db.sqlite")
+    try:
+        c = conn.cursor()
+        c.execute(query)
+        return c.fetchall()
+    except sqlite3.OperationalError as err:
+        return f"the following error occurred: {str(err)}"
+    finally:
+        conn.close()
+
+
+# build a tool from the function above
+run_query_tool = Tool.from_function(
+    name="run_sqlite_query",
+    description="Run SQLite query",
+    func=run_sqlite_query
+)
+
+# build a tool
+company_search_tool = Tool.from_function(
+    name="company_info",
+    description="useful when you need to answer questions about the company",
+    func=lambda s: Faker().company(0)
+)
+
+product_search_tool = Tool(
+    name="product_search",
+    description="useful when you need to answer questions about the company products",
+    func=lambda x: "CRM Foo Application"
+)
+
+music_search_tool = Tool(
+    name="music_search",
+    description="useful when you need to answer questions about music",
+    func=lambda x: "Michael Jackson"
+)
 
 
 @tool
@@ -43,30 +87,14 @@ def get_product_calories(product: str) -> int:
 
 
 class TestAgents(unittest.TestCase):
+    def setUp(self):
+        self.current_debug = get_debug()
+        # set_debug(True)
 
-    def test_agent_idea_without_lcel(self):
-        # third-party code
-        def run_sqlite_query(query):
-            conn = sqlite3.connect("./data/db.sqlite")
-            try:
-                c = conn.cursor()
-                c.execute(query)
-                return c.fetchall()
-            except sqlite3.OperationalError as err:
-                return f"the following error occurred: {str(err)}"
-            finally:
-                conn.close()
+    def tearDown(self):
+        set_debug(self.current_debug)
 
-        # build a tool from the function above
-        run_query_tool = Tool.from_function(
-            name="run_sqlite_query",
-            description="Run SQLite query",
-            func=run_sqlite_query
-        )
-
-        # compose the tool list
-        tools = [run_query_tool]
-
+    def test_agent_idea(self):
         # create a prompt template
         prompt = ChatPromptTemplate.from_messages([
             HumanMessagePromptTemplate.from_template("{input}"),
@@ -74,70 +102,116 @@ class TestAgents(unittest.TestCase):
             MessagesPlaceholder(variable_name="agent_scratchpad")
         ])
 
+        # compose the tool list
+        tools = [product_search_tool]
+
         # Agent is a chain that knows how to use tools
+        # - construct the OpenAI Functions agent
         # - takes the list of tools and covert them into JSON function description for ChatGPT
-        agent = OpenAIFunctionsAgent(
-            llm=get_chat_model(),
-            prompt=prompt,
-            tools=tools,
-        )
+        agent = create_openai_functions_agent(get_chat_model(), tools, prompt)
 
         # AgentExecutor takes an agent and runs until the response is NOT a function call
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=True
-        )
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-        # handle the correct llm response
-        res = agent_executor.invoke({"input": "How many users in the database?"})
-        # pprint(res)
+        # execute the agent
+        res_dict = agent_executor.invoke({"input": "I need info about the product with the LPR-146"})
 
-        # handle the incorrect llm response to be corrected by LLM
-        res = agent_executor.invoke({"input": "How many users have provided a shipping address?"})
-        # pprint(res)
-
-        # handle the totally incorrect llm response
-        with self.assertRaises(Exception) as context:
-            agent_executor.invoke({"input": "How many contacts in the database?"})
-
-        self.assertTrue('no such table: contacts' in context.exception.args[0])
+        # evaluate the results
+        self.assertTrue("CRM Foo Application" in res_dict["output"])
 
     def test_create_agent(self):
-        tools = (
-            DuckDuckGoSearchRun(),
-            Tool(
-                name="MusicSearch",
-                func=lambda x: "Michael Jackson",
-                description="useful when you need to answer questions about music"
+        tools = [DuckDuckGoSearchRun(), music_search_tool]
 
-            ),
-        )
+        # pulls an object from the hub as a LangChain object
+        # https://smith.langchain.com/hub/hwchase17/openai-tools-agent
         prompt = hub.pull("hwchase17/openai-tools-agent")
 
-        agent = create_openai_tools_agent(
+        # creates an agent that uses OpenAI tools
+        agent = create_openai_tools_agent(get_chat_model(), tools, prompt)
+
+        # create an agent that uses the tools
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+        # encourage using tools #1
+        res = agent_executor.invoke({"input": "Manchester United vs Luton town match summary"})
+        print(res["output"])
+
+        # encourage using tools #2
+        res = agent_executor.invoke({"input": "Who is one of the most famous american singers?"})
+        print(res["output"])
+
+        # use llm without the tools
+        res = agent_executor.invoke({"input": "Hi! How are you? "})
+        print(res["output"])
+
+    def test_create_conversational_with_memory_agent(self):
+        # create an agent and it executor
+        prompt = hub.pull("hwchase17/openai-tools-agent")
+        tools = [TavilySearchResults(max_results=1)]
+        agent = create_openai_tools_agent(get_chat_model(), tools, prompt)
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, memory=memory, verbose=True)
+
+        # call the agent at first time
+        agent_executor.invoke({"input": "hi! my name is bob"})
+
+        # call agent with a chat history
+        out_dict = agent_executor.invoke(
+            {"input": "What's my name? Don't use tools to look this up unless you NEED to"}
+        )
+        print(out_dict["output"])
+
+    def test_create_conversational_retrieval_agent(self):
+        tools = [DuckDuckGoSearchRun()]
+
+        agent_executor = create_conversational_retrieval_agent(
             get_chat_model(),
             tools,
-            prompt
-        )
-
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
             verbose=True
         )
 
-        # use tools #1
-        res = agent_executor.invoke({"input": "Manchester United vs Luton town match summary"})
-        # pprint(res)
+        result = agent_executor({"input": "Manchester United vs Luton town match summary"})
+        print(result["output"])
 
-        # use tools #2
-        res = agent_executor.invoke({"input": "Who is one of the most famous american singers?"})
-        # pprint(res)
+    def test_build_agent_from_scratch_with_agent_executor(self):
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a very powerful assistant but not great at calculating word lengths."),
+            MessagesPlaceholder(variable_name="chat_history"),
+            ("user", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ])
 
-        # use llm without any tools
-        res = agent_executor.invoke({"input": "Hi! How are you? "})
-        # pprint(res)
+        tools = [get_word_length, get_product_calories]
+        llm_with_tools = get_chat_model().bind(functions=[format_tool_to_openai_function(t) for t in tools])
+
+        agent = (
+                {
+                    "input": lambda x: x["input"],
+                    "agent_scratchpad": lambda x: format_to_openai_function_messages(x["intermediate_steps"]),
+                    "chat_history": lambda х: х["chat_history"],
+                }
+                | prompt
+                | llm_with_tools
+                | OpenAIFunctionsAgentOutputParser()
+        )
+
+        # create an agent executor
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+        user_inputs = [
+            "How many letters in the word educa? Return the result as a number.",
+            "How fatty is a croissant? Return the result as a number."
+        ]
+        for user_input in user_inputs:
+            chat_history = []
+
+            out_dict = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
+
+            llm_out_text = out_dict["output"]
+            print("result:", llm_out_text)
+
+            chat_history.extend([HumanMessage(content=user_input), AIMessage(content=llm_out_text)])
+            print("chat_history:", chat_history)
 
     def test_build_agent_from_scratch_with_custom_executor(self):
         # create the prompt for the agent
@@ -203,137 +277,6 @@ class TestAgents(unittest.TestCase):
                     observation = selected_tool.run(agent_action.tool_input)
                     print("observation (TOOL OUTPUT):", observation)
                     intermediate_steps.append((agent_action, observation))
-
-    def test_build_agent_from_scratch_with_agent_executor(self):
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a very powerful assistant but not great at calculating word lengths."),
-            MessagesPlaceholder(variable_name="chat_history"),
-            ("user", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
-
-        tools = [get_word_length, get_product_calories]
-        llm_with_tools = get_chat_model().bind(functions=[format_tool_to_openai_function(t) for t in tools])
-
-        agent = (
-                {
-                    "input": lambda x: x["input"],
-                    "agent_scratchpad": lambda x: format_to_openai_function_messages(x["intermediate_steps"]),
-                    "chat_history": lambda х: х["chat_history"],
-                }
-                | prompt
-                | llm_with_tools
-                | OpenAIFunctionsAgentOutputParser()
-        )
-
-        # create an agent executor
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
-        user_inputs = [
-            "How many letters in the word educa? Return the result as a number.",
-            "How fatty is a croissant? Return the result as a number."
-        ]
-        for user_input in user_inputs:
-            chat_history = []
-
-            out_dict = agent_executor.invoke({"input": user_input, "chat_history": chat_history})
-
-            llm_out_text = out_dict["output"]
-            print("result:", llm_out_text)
-
-            chat_history.extend([HumanMessage(content=user_input), AIMessage(content=llm_out_text)])
-            print("chat_history:", chat_history)
-
-    def test_openai_functions_agent_deprecated(self):
-        # initialize tools
-        tools = [TavilySearchResults(max_results=1)]
-
-        # Create Agent
-        # get the prompt to use - you can modify this!
-        prompt = hub.pull("hwchase17/openai-functions-agent")
-        # get LLM that will drive the agent
-        llm = get_chat_model()
-        # construct the OpenAI Functions agent
-        agent = create_openai_functions_agent(llm, tools, prompt)
-
-        # Run Agent
-        # create an agent executor by passing in the agent and tools
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
-        res_str = agent_executor.invoke({"input": "what is LangChain?"})
-        pprint(res_str["output"])
-
-        # Run Agent with chat history
-        res_str = agent_executor.invoke(
-            {
-                "input": "what's my name?",
-                "chat_history": [
-                    HumanMessage(content="hi! my name is bob"),
-                    AIMessage(content="Hello Bob! How can I assist you today?"),
-                ],
-            }
-        )
-        pprint(res_str["output"])
-
-    def test_openai_tools_agent(self):
-        prompt = hub.pull("hwchase17/openai-tools-agent")
-
-        tools = [TavilySearchResults(max_results=1)]
-        llm = get_chat_model()
-        agent = create_openai_tools_agent(llm, tools, prompt)
-
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
-        out_dict = agent_executor.invoke({"input": "what is LangChain?"})
-        pprint(out_dict["output"])
-
-        # run agent with a chat history
-        out_dict = agent_executor.invoke(
-            {
-                "input": "what's my name? Don't use tools to look this up unless you NEED to",
-                "chat_history": [
-                    HumanMessage(content="hi! my name is bob"),
-                    AIMessage(content="Hello Bob! How can I assist you today?"),
-                ],
-            }
-        )
-        print(out_dict["output"])
-
-    def test_create_conversational_with_memory_agent(self):
-        # tools = [DuckDuckGoSearchRun()]
-        # prompt = hub.pull("hwchase17/openai-tools-agent")
-        #
-        # agent = create_openai_tools_agent(get_chat_model(), tools, prompt)
-        # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
-        # initialize_agent
-
-        # create_react_agent
-
-        # TODO: implement
-
-        # tools = [DuckDuckGoSearchRun()]
-        # memory = ConversationBufferMemory(memory_key="chat_history")
-        #
-        # memory_key = "chat_history"
-        #
-        # agent_executor = create_openai_tools_agent(
-        #     get_chat_model(),
-        #     tools,
-        #     verbose=True,
-        #     memory=memory
-        # )
-        #
-        # result = agent_executor({"input": "hi, i am bob "})
-        # print("simple_agent:", result["output"])
-        raise NotImplementedError()
-
-    def test_create_conversational_retrieval_agent(self):
-        tools = [DuckDuckGoSearchRun()]
-        agent_executor = create_conversational_retrieval_agent(get_chat_model(), tools, verbose=True)
-
-        result = agent_executor({"input": "Manchester United vs Luton town match summary"})
-        print("simple_agent:", result["output"])
 
     def test_invoke_two_tools_agent(self):
         @tool
@@ -504,6 +447,47 @@ class TestAgents(unittest.TestCase):
             return_only_outputs=True,
         )
         pprint(out_response)
+
+    def test_agent_using_db(self):
+        # create a prompt template
+        prompt = ChatPromptTemplate.from_messages([
+            HumanMessagePromptTemplate.from_template("{input}"),
+            # keeps the intermediate steps that filled in by the agent
+            MessagesPlaceholder(variable_name="agent_scratchpad")
+        ])
+
+        # compose the tool list
+        tools = [run_query_tool]
+
+        # Agent is a chain that knows how to use tools
+        # - takes the list of tools and covert them into JSON function description for ChatGPT
+        agent = OpenAIFunctionsAgent(
+            llm=get_chat_model(),
+            prompt=prompt,
+            tools=tools,
+        )
+
+        # AgentExecutor takes an agent and runs until the response is NOT a function call
+        agent_executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=True
+        )
+
+        # handle the correct llm response
+        res_dict = agent_executor.invoke({"input": "How many users in the database?"})
+        pprint(res_dict["output"])
+
+        self.assertEqual("There are 2000 users in the database.", res_dict["output"])
+
+        # handle the incorrect llm response to be corrected by LLM
+        # res_dict = agent_executor.invoke({"input": "How many users have provided a shipping address?"})
+        # pprint(res_dict)
+
+        # handle the totally incorrect llm response
+        # with self.assertRaises(Exception) as context:
+        #     agent_executor.invoke({"input": "How many contacts in the database?"})
+        # self.assertTrue('no such table: contacts' in context.exception.args[0])
 
 
 # def test_retrival_agent(self):
