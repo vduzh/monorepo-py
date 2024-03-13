@@ -54,25 +54,51 @@ class TestTools(unittest.TestCase):
     def tearDown(self):
         set_debug(self.current_debug)
 
+    @staticmethod
+    def _print_tool_info(custom_tool):
+        print("Tool Details")
+        print("name:", custom_tool.name)
+        print("description:", custom_tool.description)
+        print("JSON schema of the inputs:", json.dumps(custom_tool.args, indent=2))
+        print("return directly to the user:", custom_tool.return_direct)
+
     def test_custom_tool_from_function_with_tool_class(self):
         # define custom function
-        def say_hello(name: str) -> str:
-            """Greets a person."""
-            return f"Hello {name}!"
+        def say_hello(name: str) -> str: return f"Hello {name}!"
 
         # create a tool from the custom function
         custom_tool = Tool.from_function(
-            func=say_hello,
             name="Greeting",
             description="useful for when you need to greet somebody with its name",
+            func=say_hello,
         )
+        self._print_tool_info(custom_tool)
 
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
+        # runs the tool
         res_str = custom_tool.run("John")
+
+        # checks the result
+        self.assertEqual("Hello John!", res_str)
+
+    def test_custom_tool_from_function_with_tool_class_and_args_schema(self):
+        def say_hello(name: str) -> str: return f"Hello {name}!"
+
+        class CustomArgsSchema(BaseModel):
+            user_name: str
+
+        # create a tool from the custom function
+        custom_tool = Tool.from_function(
+            name="Greeting",
+            description="useful for when you need to greet somebody with its name",
+            func=say_hello,
+            args_schema=CustomArgsSchema
+        )
+        self._print_tool_info(custom_tool)
+
+        # runs the tool
+        res_str = custom_tool.run("John")
+
+        # checks the result
         self.assertEqual("Hello John!", res_str)
 
     def test_custom_tool_from_function_with_tool_decorator(self):
@@ -82,43 +108,54 @@ class TestTools(unittest.TestCase):
             return f"Hello {name}!"
 
         custom_tool = say_hello
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
+        self._print_tool_info(custom_tool)
 
         res_str = custom_tool.run("John")
         self.assertEqual("Hello John!", res_str)
 
-    def test_custom_tool_with_subclassing_base_tool(self):
-        class ProductInput(BaseModel):
-            name: str = Field(description="should be the name of the product")
+    def test_custom_tool_subclassing_base_tool(self):
+        class CaloriesCalculatorArgsSchema(BaseModel):
+            product: str = Field(description="should be the name of the product")
 
         class CaloriesCalculatorTool(BaseTool):
             name = "calories_calculator"
             description = "use this tool when you need to calculate the amount of calories a product contains."
-            args_schema: Type[BaseModel] = ProductInput
+            args_schema: Type[BaseModel] = CaloriesCalculatorArgsSchema
 
-            def _run(self, name: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> int:
+            def _run(self, product: str, run_manager: Optional[CallbackManagerForToolRun] = None) -> int:
                 """Use the tool."""
-                return len(name * 100)
+                return len(product * 100)
 
-            def _arun(self, name: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> int:
+            def _arun(self, product: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None) -> int:
                 raise NotImplementedError("calories_calculator tool does not support async")
 
         custom_tool = CaloriesCalculatorTool()
+        self._print_tool_info(custom_tool)
 
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", custom_tool.args)
-        print("return directly to the user:", custom_tool.return_direct)
-
-        res_str = custom_tool.run({"name": "lemon"})
+        # res_str = custom_tool.run({"product": "lemon"})
+        res_str = custom_tool.run("lemon")
         self.assertEqual(500, res_str)
 
         res_str = custom_tool.run("orange")
         self.assertEqual(600, res_str)
+
+    def test_custom_tool_with_multiple_inputs_with_structured_tool_dataclass(self):
+        def multiply(a, b): return a * b
+
+        class CustomArgsSchema(BaseModel):
+            a: int = Field(description="should be the first argument")
+            b: int = Field(description="should be the second argument")
+
+        custom_tool = StructuredTool.from_function(
+            name="Greeting",
+            description="useful for when you need to somebody with its name",
+            func=multiply,
+            args_schema=CustomArgsSchema
+        )
+        self._print_tool_info(custom_tool)
+
+        res_num = custom_tool.run({"a": 10, "b": 20})
+        self.assertEqual(200, res_num)
 
     def test_custom_tool_with_multiple_inputs(self):
         @tool
@@ -128,46 +165,24 @@ class TestTools(unittest.TestCase):
 
         custom_tool = multiply
 
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", json.dumps(custom_tool.args, indent=2))
-        print("return directly to the user:", custom_tool.return_direct)
+        self._print_tool_info(custom_tool)
 
         result_int = custom_tool.invoke({"a": 10, "b": 2})
         self.assertEqual(20, result_int)
-
-    def test_custom_tool_with_multiple_inputs_with_structured_tool_dataclass(self):
-        def say_hello(name: str) -> str:
-            """Greets a person."""
-            return f"Hello {name}!"
-
-        custom_tool = StructuredTool.from_function(
-            func=say_hello,
-            name="Greeting",
-            description="useful for when you need to somebody with its name",
-        )
-
-        print("default name:", custom_tool.name)
-        print("default description:", custom_tool.description)
-        print("default JSON schema of the inputs:", json.dumps(custom_tool.args, indent=2))
-        print("return directly to the user:", custom_tool.return_direct)
-
-        res_str = custom_tool.run("John")
-        self.assertEqual("Hello John!", res_str)
 
     def test_tool_from_chain(self):
         llm_math_chain = LLMMathChain(llm=get_chat_model())
 
         chain_tool = Tool(
             name="calculator",
-            func=llm_math_chain.run,
             description="use it when you need to answer questions abut math",
+            func=llm_math_chain.run,
             # TODO: what for?
             return_direct=True
         )
 
         result = chain_tool.run("what is 2*3")
-        print("llm_math_chain:result", result)
+        print(result)
 
     def test_tools_as_openai_functions(self):
         tools = [MoveFileTool()]
