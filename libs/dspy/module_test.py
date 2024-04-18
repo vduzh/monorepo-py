@@ -15,6 +15,13 @@ class TestModule(TestCase):
         # lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
+    def test_chain_of_thought(self):
+        qa_module = dspy.ChainOfThought("question -> answer")
+
+        res = qa_module(question=self.__QUESTION)
+        print(res)
+        self.assertTrue(res.answer.find("Berlin") > -1)
+
     def test_chain_of_thought_num_of_outputs(self):
         qa_module = dspy.ChainOfThought("question -> answer", n=5)
 
