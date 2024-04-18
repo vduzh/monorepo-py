@@ -6,7 +6,7 @@ from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
 from dspy.evaluate import Evaluate
 from dspy.teleprompt import BootstrapFewShot
 
-from model import get_llm
+from model import get_lm
 
 
 class TestWorkingExample(TestCase):
@@ -14,9 +14,9 @@ class TestWorkingExample(TestCase):
     @classmethod
     def setUpClass(cls):
         # Set up the LM
-        llm = get_llm()
-        llm.inspect_history(n=1)
-        dspy.settings.configure(lm=llm)
+        lm = get_lm()
+        lm.inspect_history(n=1)
+        dspy.settings.configure(lm=lm)
 
         # Load math questions from the GSM8K dataset
         gsm8k = GSM8K()
