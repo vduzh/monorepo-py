@@ -17,14 +17,22 @@ class TestModule(TestCase):
         dspy.settings.configure(lm=lm)
 
     def test_predict(self):
-        predict_module = dspy.Predict("question -> answer")
+        # 1. Define the signature.
+        signature = "question -> answer"
 
+        # 2. Declare the Predict module with the signature.
+        predict_module = dspy.Predict(signature)
+
+        # 3. Call the module with input argument(s).
         res = predict_module(question=QUESTION)
         print(res)
 
+        # 4. Access the output.
+        answer = res.answer
+
         # there is no auxiliary information just
         self.assertEqual(1, len(res))
-        self.assertEqual("Berlin", res.answer)
+        self.assertEqual("Berlin", answer)
 
     def test_chain_of_thought(self):
         qa_module = dspy.ChainOfThought("question -> answer")
