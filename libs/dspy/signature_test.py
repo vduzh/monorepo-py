@@ -20,6 +20,18 @@ class TestSignature(TestCase):
         lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
+    def test_lm(self):
+        # Define the signature (return an answer, given a question)
+        signature_str = "question -> answer"
+        # Create a module (ChainOfThought) and assign it the signature.
+        qa_module = dspy.ChainOfThought(signature_str)
+
+        # Run with the default LM configured with `dspy.configure` above.
+        response_as_prediction = qa_module(question=QUESTION)
+        print(response_as_prediction)
+
+        self.assertEqual("Berlin", response_as_prediction.answer)
+
     def test_inline_signatures_question_answering(self):
         signature = "question -> answer"
         qa = dspy.Predict(signature)
@@ -39,7 +51,7 @@ class TestSignature(TestCase):
         response = classify(sentence=sentence)
         print(response)
 
-        # self.assertEqual("Positive", response.sentiment)
+        self.assertEqual("Positive", response.sentiment)
 
     def test_inline_signatures_summarization(self):
         # Example from the XSum dataset.
@@ -60,17 +72,29 @@ class TestSignature(TestCase):
 
         # self.assertEqual("Neutral", response.sentiment)
 
-    def test_lm(self):
-        # Define the signature (return an answer, given a question)
-        signature_str = "question -> answer"
-        # Create a module (ChainOfThought) and assign it the signature.
-        qa_module = dspy.ChainOfThought(signature_str)
+    def test_inline_signatures_rag_question_answering(self):
+        # TODO: implement
+        raise NotImplementedError("Retrieval-Augmented Question Answering not implemented yet")
 
-        # Run with the default LM configured with `dspy.configure` above.
-        response_as_prediction = qa_module(question=QUESTION)
-        print(response_as_prediction)
+        signature = "context, question -> answer"
+        # rag_qa = dspy.Predict(signature)
+        #
+        # response = rag_qa(context="", question=QUESTION)
+        # print(response)
+        #
+        # self.assertEqual("Berlin", response.answer)
 
-        self.assertEqual("Berlin", response_as_prediction.answer)
+    def test_inline_signatures_multiple_choice_question_answering_with_reasoning(self):
+        # TODO: implement
+        raise NotImplementedError("Multiple-Choice Question Answering with Reasoning not implemented yet")
+
+        signature = "question, choices -> reasoning, selection"
+        # rag_qa = dspy.Predict(signature)
+        #
+        # response = rag_qa(context="", question=QUESTION)
+        # print(response)
+        #
+        # self.assertEqual("Berlin", response.answer)
 
 
 if __name__ == '__main__':
