@@ -96,6 +96,23 @@ class TestSignature(TestCase):
         #
         # self.assertEqual("Berlin", response.answer)
 
+    def test_class_based_signatures_sentiment_classification(self):
+        class Emotion(dspy.Signature):
+            """Classify emotion among sadness, joy, love, anger, fear, surprise."""
+
+            sentence = dspy.InputField()
+            sentiment = dspy.OutputField()
+
+        # example from dair-ai/emotion
+        sentence = "i started feeling a little vulnerable when the giant spotlight started blinding me"
+
+        classify = dspy.Predict(Emotion)
+
+        response = classify(sentence=sentence)
+        print(response)
+
+        self.assertEqual("fear", response.sentiment)
+
 
 if __name__ == '__main__':
     unittest.main()
