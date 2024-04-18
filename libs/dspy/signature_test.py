@@ -20,7 +20,7 @@ class TestSignature(TestCase):
         lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
-    def test_inline_signatures_qa(self):
+    def test_inline_signatures_question_answering(self):
         signature = "question -> answer"
         qa = dspy.Predict(signature)
 
@@ -28,6 +28,37 @@ class TestSignature(TestCase):
         print(response)
 
         self.assertEqual("Berlin", response.answer)
+
+    def test_inline_signatures_sentiment_classification(self):
+        # example from the SST-2 dataset.
+        sentence = "it's a charming and often affecting journey."
+
+        signature = "sentence -> sentiment"
+        classify = dspy.Predict(signature)
+
+        response = classify(sentence=sentence)
+        print(response)
+
+        # self.assertEqual("Positive", response.sentiment)
+
+    def test_inline_signatures_summarization(self):
+        # Example from the XSum dataset.
+        document = """
+            The 21-year-old made seven appearances for the Hammers and netted his only goal for them in a Europa League 
+            qualification round match against Andorran side FC Lustrains last season. 
+            Lee had two loan spells in League One last term, with Blackpool and then Colchester United. 
+            He scored twice for the U's but was unable to save them from relegation. 
+            The length of Lee's contract with the promoted Tykes has not been revealed. 
+            Find all the latest football transfers on our dedicated page.
+        """
+
+        signature = "document -> summary"
+        summarize = dspy.Predict(signature)
+
+        response = summarize(document=document)
+        print(response.summary)
+
+        # self.assertEqual("Neutral", response.sentiment)
 
     def test_lm(self):
         # Define the signature (return an answer, given a question)
