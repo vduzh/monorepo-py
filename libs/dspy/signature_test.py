@@ -113,6 +113,36 @@ class TestSignature(TestCase):
 
         self.assertEqual("fear", response.sentiment)
 
+    def test_class_based_signatures_evaluate_faithfulness_to_citations(self):
+        class CheckCitationFaithfulness(dspy.Signature):
+            """Verify that the text is based on the provided context."""
+
+            context = dspy.InputField(desc="facts here are assumed to be true")
+            text = dspy.InputField()
+            faithfulness = dspy.OutputField(desc="True/False indicating if text is faithful to context")
+
+        # build the context
+        context = """
+            The 21-year-old made seven appearances for the Hammers and netted his only goal for them in a Europa League
+            qualification round match against Andorran side FC Lustrains last season. Lee had two loan spells in League 
+            One last term, with Blackpool and then Colchester United. He scored twice for the U's but was 
+            unable to save them from relegation. The length of Lee's contract with the promoted Tykes has not been 
+            revealed. Find all the latest football transfers on our dedicated page.
+        """
+
+        # specify text to evaluate
+        text = "Lee scored 3 goals for Colchester United."
+
+        # create a module
+        faithfulness = dspy.ChainOfThought(CheckCitationFaithfulness)
+
+        # run the program
+        response = faithfulness(context=context, text=text)
+        print(response)
+
+        # assert the result
+        self.assertFalse(eval(response.faithfulness))
+
 
 if __name__ == '__main__':
     unittest.main()
