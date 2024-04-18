@@ -34,6 +34,24 @@ class TestModule(TestCase):
         self.assertEqual(1, len(res))
         self.assertEqual("Berlin", answer)
 
+    def test_configuration_keys(self):
+        module = dspy.Predict(
+            "question -> answer",
+            # number of completions
+            n=5
+        )
+
+        res = module(question="What are the largest cities in Germany?")
+        print(res)
+
+        # Access the outputs.
+        answer_lst = res.completions.answer
+        # print(answer)
+
+        self.assertEqual(5, len(answer_lst))
+        for one_answer in answer_lst:
+            self.assertTrue(one_answer.find("Berlin") > -1)
+
     def test_chain_of_thought(self):
         qa_module = dspy.ChainOfThought("question -> answer")
 
@@ -43,13 +61,6 @@ class TestModule(TestCase):
         self.assertEqual(2, len(res))
         self.assertIsNotNone(res.rationale)
         self.assertEqual("Berlin", res.answer)
-
-    def test_chain_of_thought_num_of_outputs(self):
-        qa_module = dspy.ChainOfThought("question -> answer", n=5)
-
-        res = qa_module(question="What are the largest cities in Germany?")
-        print(res)
-        self.assertTrue(res.answer.find("Berlin") > -1)
 
 
 if __name__ == '__main__':
