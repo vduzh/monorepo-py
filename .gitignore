@@ -9,10 +9,14 @@ requirements.txt
 info/
 .env
 cache
+**/libs/dspy/*.log
 
 # tmp files
 # exclude everything
 **/tmp/*
 # exception to the rule
 !**/tmp/.gitkeep
+
+
+
 
