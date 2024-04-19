@@ -62,6 +62,24 @@ class TestModule(TestCase):
         self.assertIsNotNone(res.rationale)
         self.assertEqual("Berlin", res.answer)
 
+    def test_program_of_thought(self):
+        module = dspy.ProgramOfThought("question -> answer")
+
+        # TODO:implement
+        raise NotImplementedError()
+
+    def test_re_act(self):
+        module = dspy.ReAct("question -> answer")
+
+        # TODO:implement
+        raise NotImplementedError()
+
+    def test_multi_chain_comparison(self):
+        module = dspy.MultiChainComparison("question -> answer")
+
+        # TODO:implement
+        raise NotImplementedError()
+
 
 if __name__ == '__main__':
     unittest.main()
