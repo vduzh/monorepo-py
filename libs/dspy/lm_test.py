@@ -24,7 +24,7 @@ class TestLanguageModels(TestCase):
         res_str = str(res_lst[0])
         print(res_str)
 
-        self.assertTrue(res_str.find("Berlin") > -1)
+        self.assertIn("Berlin", res_str)
 
     def test_multiple_lm(self):
         default_lm = dspy.OpenAI(max_tokens=250)

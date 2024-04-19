@@ -49,8 +49,8 @@ class TestModule(TestCase):
         # print(answer)
 
         self.assertEqual(5, len(answer_lst))
-        for one_answer in answer_lst:
-            self.assertTrue(one_answer.find("Berlin") > -1)
+        for a in answer_lst:
+            self.assertIn("Berlin", a)
 
     def test_chain_of_thought(self):
         qa_module = dspy.ChainOfThought("question -> answer")
