@@ -1,4 +1,5 @@
 import unittest
+from pprint import pprint
 from unittest import TestCase
 
 import dspy
@@ -21,6 +22,10 @@ class TestWorkingExample(TestCase):
         # Load math questions from the GSM8K dataset
         gsm8k = GSM8K()
         cls.gsm8k_train_set, cls.gsm8k_dev_set = gsm8k.train[:10], gsm8k.dev[:10]
+
+    def test_fake(self):
+        print(self.gsm8k_train_set[:1])
+        # pprint(self.gsm8k_dev_set[:1])
 
     def test_minimal_working_example(self):
         # Define the Module
