@@ -46,6 +46,7 @@ class TestSignature(TestCase):
         sentence = "it's a charming and often affecting journey."
 
         signature = "sentence -> sentiment"
+        # call the module
         classify = dspy.Predict(signature)
 
         response = classify(sentence=sentence)
@@ -69,8 +70,6 @@ class TestSignature(TestCase):
 
         response = summarize(document=document)
         print(response.summary)
-
-        # self.assertEqual("Neutral", response.sentiment)
 
     def test_inline_signatures_rag_question_answering(self):
         # TODO: implement

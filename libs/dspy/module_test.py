@@ -56,7 +56,8 @@ class TestModule(TestCase):
         qa_module = dspy.ChainOfThought("question -> answer")
 
         res = qa_module(question=QUESTION)
-        print(res)
+        print("rationale:", res.rationale)
+        print("answer:", res.answer)
 
         self.assertEqual(2, len(res))
         self.assertIsNotNone(res.rationale)
