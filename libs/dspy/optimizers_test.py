@@ -33,8 +33,16 @@ class TestOptimizers(unittest.TestCase):
 
         teleprompter = BootstrapFewShotWithRandomSearch(metric=YOUR_METRIC_HERE, **config)
         optimized_program = teleprompter.compile(YOUR_PROGRAM_HERE, trainset=YOUR_TRAINSET_HERE)
+
         pprint("Testing foo")
         self.assertTrue(True)
+
+        # Saving a program
+        optimized_program.save(YOUR_SAVE_PATH)
+
+        # Loading a program
+        loaded_program = YOUR_PROGRAM_CLASS()
+        loaded_program.load(path=YOUR_SAVE_PATH)
 
     def test_mipro(self):
         """If you have more data than that, e.g. 300 examples or more"""
