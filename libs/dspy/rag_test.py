@@ -2,7 +2,7 @@ import unittest
 
 import dspy
 from dspy.datasets import HotPotQA
-from dspy.evaluate import answer_exact_match, answer_passage_match
+from dspy.evaluate import answer_exact_match, answer_passage_match, Evaluate
 from dspy.teleprompt import BootstrapFewShot
 
 from libs.dspy.model import get_lm
@@ -27,6 +27,22 @@ class TestRag(unittest.TestCase):
         # Tell DSPy that the 'question' field is the input. Any other fields are labels and/or metadata.
         cls.train_set = [x.with_inputs('question') for x in dataset.train]
         cls.dev_set = [x.with_inputs('question') for x in dataset.dev]
+
+    def test_data_set(self):
+        # Research the train_set
+        train_example = self.train_set[0]
+
+        print(f"\n\nTrain example: {train_example}")
+        print(f"Question: {train_example.question}")
+        print(f"Answer: {train_example.answer}")
+
+        # Research the dev_set
+        dev_example = self.dev_set[18]
+
+        print(f"\n\nDev example: {dev_example}")
+        print(f"Question: {dev_example.question}")
+        print(f"Answer: {dev_example.answer}")
+        print(f"Relevant Wikipedia Titles: {dev_example.gold_titles}")
 
     def test_rag(self):
         # Define the signature
@@ -68,7 +84,7 @@ class TestRag(unittest.TestCase):
         # Set up a basic teleprompter, which will compile our RAG program.
         teleprompter = BootstrapFewShot(metric=validate_context_and_answer)
 
-        # Compile!
+        # Compile the RAG program
         compiled_rag = teleprompter.compile(RAG(), trainset=self.train_set)
 
         # Ask any question you like to this simple RAG program.
@@ -81,6 +97,28 @@ class TestRag(unittest.TestCase):
         print(f"Question: {my_question}")
         print(f"Predicted Answer: {prediction.answer}")
         print(f"Retrieved Contexts (truncated): {[c[:200] + '...' for c in prediction.context]}")
+
+        # Evaluating the Pipeline
+
+        # Set up the `evaluate_on_hotpot_qa` function. We'll use this many times below.
+        evaluate_on_hotpot_qa = Evaluate(
+            devset=self.dev_set,
+            num_threads=1,
+            display_progress=False,
+            display_table=5
+        )
+
+        # Evaluate the `compiled_rag` program with the `answer_exact_match` metric.
+        evaluate_on_hotpot_qa(compiled_rag, metric=answer_exact_match)
+
+        # Evaluating the Retrieval
+        def gold_passages_retrieved(example, pred, trace=None):
+            gold_titles = set(map(dspy.evaluate.normalize_text, example['gold_titles']))
+            found_titles = set(map(dspy.evaluate.normalize_text, [c.split(' | ')[0] for c in pred.context]))
+
+            return gold_titles.issubset(found_titles)
+
+        compiled_rag_retrieval_score = evaluate_on_hotpot_qa(compiled_rag, metric=gold_passages_retrieved)
 
 
 if __name__ == '__main__':
