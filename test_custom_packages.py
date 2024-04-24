@@ -1,5 +1,5 @@
-# import apps
-# print(dir(apps))
+# import projects
+# print(dir(projects))
 
-from apps.llm_speach_to_text import main
+from projects.llm_speach_to_text import main
 main()

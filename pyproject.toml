@@ -1,20 +1,20 @@
 [tool.poetry]
-name = "machine-learning-py"
+name = "monorepo-py"
 version = "0.1.0"
-description = "A machine learning using Poetry"
+description = "A Python monorepo using Poetry"
 authors = ["Viktar Duzh <Viktar.Duzh@gmail.com>"]
 
 packages = [
-    { include = "apps/*" },
+    { include = "projects/*" },
     { include = "libs/*" },
 ]
 
 [tool.poetry.scripts]
-llm_speach-to-text = "apps.llm_speach_to_text:main"
-llm_code_and_test_generator = "apps.llm_code_and_test_generator:main"
-llm_chatbot = "apps.llm_chatbot:main"
-llm_rag_facts = "apps.llm_rag_facts:main"
-llm_rag_facts_db = "apps.llm_rag_facts:db"
+llm_speach-to-text = "projects.llm_speach_to_text:main"
+llm_code_and_test_generator = "projects.llm_code_and_test_generator:main"
+llm_chatbot = "projects.llm_chatbot:main"
+llm_rag_facts = "projects.llm_rag_facts:main"
+llm_rag_facts_db = "projects.llm_rag_facts:db"
 
 [tool.poetry.dependencies]
 #python = "^3.11"

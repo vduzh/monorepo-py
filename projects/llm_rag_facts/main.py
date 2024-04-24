@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStore
 
-from apps.llm_rag_facts.llm_utils import get_chat_model, get_embeddings
+from projects.llm_rag_facts.llm_utils import get_chat_model, get_embeddings
 
 # set_debug(True)
 

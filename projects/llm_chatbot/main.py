@@ -6,7 +6,7 @@ from langchain_community.chat_message_histories import FileChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 
-from apps.llm_chatbot.llm_utils import get_chat_model
+from projects.llm_chatbot.llm_utils import get_chat_model
 
 # Load environment variables from .env file
 load_dotenv()

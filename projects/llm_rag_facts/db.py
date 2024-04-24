@@ -2,7 +2,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores.chroma import Chroma
 
-from apps.llm_rag_facts.llm_utils import get_embeddings
+from projects.llm_rag_facts.llm_utils import get_embeddings
 
 
 def main():
