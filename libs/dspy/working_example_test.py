@@ -16,7 +16,6 @@ class TestWorkingExample(TestCase):
     def setUpClass(cls):
         # Set up the LM
         lm = get_lm()
-        lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
         # Load math questions from the GSM8K dataset

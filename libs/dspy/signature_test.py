@@ -18,7 +18,6 @@ class TestSignature(TestCase):
     def setUpClass(cls):
         # Set up the LM
         lm = get_lm()
-        lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
     def test_lm(self):
