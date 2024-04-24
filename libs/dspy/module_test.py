@@ -13,7 +13,6 @@ class TestModule(TestCase):
     @classmethod
     def setUpClass(cls):
         lm = get_lm()
-        # lm.inspect_history(n=1)
         dspy.settings.configure(lm=lm)
 
     def test_predict(self):
@@ -25,7 +24,10 @@ class TestModule(TestCase):
 
         # 3. Call the module with input argument(s).
         res = predict_module(question=QUESTION)
-        print(res)
+
+        # Inspect the last prompt for the LM
+        dspy.settings.lm.inspect_history(n=1)
+        print("Response:", res)
 
         # 4. Access the output.
         answer = res.answer
@@ -42,7 +44,7 @@ class TestModule(TestCase):
         )
 
         res = module(question="What are the largest cities in Germany?")
-        print(res)
+        print("Prediction:", res)
 
         # Access the outputs.
         answer_lst = res.completions.answer
