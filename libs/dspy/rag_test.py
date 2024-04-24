@@ -13,7 +13,6 @@ class TestRag(unittest.TestCase):
     def setUpClass(cls):
         # Set up the LM
         lm = get_lm()
-        lm.inspect_history(n=1)
 
         # Set up the retrieval model
         colbert_v2_wiki17_abstracts = dspy.ColBERTv2(url='http://20.102.90.50:2017/wiki17_abstracts')
@@ -55,7 +54,8 @@ class TestRag(unittest.TestCase):
             answer = dspy.OutputField(desc="often between 1 and 5 words")
 
         # Build the Pipeline as a DSPy module
-        class RAG(dspy.Module):
+        class RagProgram(dspy.Module):
+
             def __init__(self, num_passages=3):
                 super().__init__()
 
@@ -85,7 +85,7 @@ class TestRag(unittest.TestCase):
         teleprompter = BootstrapFewShot(metric=validate_context_and_answer)
 
         # Compile the RAG program
-        compiled_rag = teleprompter.compile(RAG(), trainset=self.train_set)
+        compiled_rag = teleprompter.compile(RagProgram(), trainset=self.train_set)
 
         # Ask any question you like to this simple RAG program.
         my_question = "What castle did David Gregory inherit?"
@@ -98,6 +98,9 @@ class TestRag(unittest.TestCase):
         print(f"Predicted Answer: {prediction.answer}")
         print(f"Retrieved Contexts (truncated): {[c[:200] + '...' for c in prediction.context]}")
 
+        # Inspect the last prompt for the LM
+        dspy.settings.lm.inspect_history(n=1)
+
         # Evaluating the Pipeline
 
         # Set up the `evaluate_on_hotpot_qa` function. We'll use this many times below.
@@ -109,7 +112,8 @@ class TestRag(unittest.TestCase):
         )
 
         # Evaluate the `compiled_rag` program with the `answer_exact_match` metric.
-        evaluate_on_hotpot_qa(compiled_rag, metric=answer_exact_match)
+        metric = answer_exact_match
+        evaluate_on_hotpot_qa(compiled_rag, metric=metric)
 
         # Evaluating the Retrieval
         def gold_passages_retrieved(example, pred, trace=None):
