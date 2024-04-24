@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{super()}}About{% endblock %}
+{% block content %}
+{{super()}}
+<h1>Foo index page</h1>
+<p>Accusantium architecto assumenda delectus dignissimos ducimus eaque eius est facere fugiat, incidunt iste mollitia
+    odit optio, porro praesentium quaerat quos, repellat reprehenderit sint sunt veritatis voluptatem voluptatum!
+</p>
+<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis provident qui quod. Accusamus amet architecto
+    beatae, blanditiis commodi doloremque eligendi nobis quae quas recusandae reprehenderit saepe sint temporibus.
+    Labore, ratione.</p>
+
+<p>
+    Dolores eos facilis fugiat, laudantium necessitatibus quisquam repellendus. Aliquam, aspernatur autem cupiditate
+    dolorem doloremque earum eius impedit iure laudantium libero minima molestias nam necessitatibus neque nihil,
+    nostrum obcaecati possimus quis quo quod quos reiciendis saepe sequi sint soluta tempore voluptatibus!
+</p>
+
+<h3>Page params:</h3>
+<ul>
+    {% for color in colors %}
+    <li>{{color}}</li>
+    {% endfor %}
+</ul>
+
+<h3>Check for conditions:</h3>
+{% if 'Green' in colors %}
+<p>Green is in the list</p>
+{% else %}
+<p>Green is not in the list</p>
+{% endif %}
+
+<h3>Image on the page:</h3>
+<div><img src="{{url_for('foo.static', filename='images/foo/foo.png')}}" alt=""></div>
+{% endblock %}
