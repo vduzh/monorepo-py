@@ -1,10 +1,17 @@
-import json
 import unittest
-from pprint import pprint
 
 import dspy
 from dspy import Example
 from dspy.datasets import HotPotQA
+
+
+def print_example(title: str, example: Example):
+    # use list comprehension to initialize a dictionary
+    # data = {key: example.get(key) for key in example.keys()}
+
+    # print(title, json.dumps(data, indent=2))
+    # print(title, data)
+    print(title, example)
 
 
 class TestData(unittest.TestCase):
@@ -50,15 +57,7 @@ class TestData(unittest.TestCase):
         raise NotImplementedError()
 
     def test_hot_pot_qa_data_set(self):
-        def print_example(title: str, example: Example):
-            # use list comprehension to initialize a dictionary
-            # data = {key: example.get(key) for key in example.keys()}
-
-            # print(title, json.dumps(data, indent=2))
-            # print(title, data)
-            print(title, example)
-
-        # Load the dataset
+        # Load the dataset with data and addition labels from Wikipedia
         data_set = HotPotQA(
             train_seed=1,
             train_size=20,
