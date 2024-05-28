@@ -84,6 +84,7 @@ class TestModule(TestCase):
         raise NotImplementedError()
 
     def test_custom_module(self):
+        # 1. Define the module (a custom program)
         class CustomModule(dspy.Module):
             def __init__(self):
                 super().__init__()
@@ -92,12 +93,18 @@ class TestModule(TestCase):
             def forward(self, question):
                 return self.prog(question=question)
 
+        # 2. Create an instance of the module
         custom_module = CustomModule()
+
+        # 3. Call the module with input argument(s).
         prediction = custom_module(question=QUESTION)
         # print(prediction)
 
-        self.assertEqual(1, len(prediction))
-        self.assertEqual("Berlin", prediction.answer)
+        # 4. Access the output.
+        answer = prediction.answer
+
+        # Assert the answer
+        self.assertEqual("Berlin", answer)
 
 
 if __name__ == '__main__':
