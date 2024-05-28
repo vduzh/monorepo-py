@@ -88,7 +88,7 @@ class TestModule(TestCase):
         class CustomModule(dspy.Module):
             def __init__(self):
                 super().__init__()
-                self.prog = dspy.Predict("question -> answer")
+                self.prog = dspy.ChainOfThought("question -> answer")
 
             def forward(self, question):
                 return self.prog(question=question)
@@ -101,8 +101,7 @@ class TestModule(TestCase):
         # print(prediction)
 
         # Inspect the Model's History
-        turbo.inspect_history(n=1)
-
+        dspy.settings.lm.inspect_history(n=1)
 
         # 4. Access the output.
         answer = prediction.answer
