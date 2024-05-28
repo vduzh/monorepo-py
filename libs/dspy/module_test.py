@@ -15,7 +15,7 @@ class TestModule(TestCase):
         lm = get_lm()
         dspy.settings.configure(lm=lm)
 
-    def test_predict(self):
+    def test_built_in_predict_module(self):
         # 1. Define the signature.
         signature = "question -> answer"
 
@@ -54,7 +54,7 @@ class TestModule(TestCase):
         for a in answer_lst:
             self.assertIn("Berlin", a)
 
-    def test_chain_of_thought(self):
+    def test_built_in_chain_of_thought_module(self):
         qa_module = dspy.ChainOfThought("question -> answer")
 
         res = qa_module(question=QUESTION)
@@ -65,23 +65,39 @@ class TestModule(TestCase):
         self.assertIsNotNone(res.rationale)
         self.assertEqual("Berlin", res.answer)
 
-    def test_program_of_thought(self):
+    def test_built_in_program_of_thought_module(self):
         module = dspy.ProgramOfThought("question -> answer")
 
         # TODO:implement
         raise NotImplementedError()
 
-    def test_re_act(self):
+    def test_built_in_re_act_module(self):
         module = dspy.ReAct("question -> answer")
 
         # TODO:implement
         raise NotImplementedError()
 
-    def test_multi_chain_comparison(self):
+    def test_built_in_multi_chain_comparison_module(self):
         module = dspy.MultiChainComparison("question -> answer")
 
         # TODO:implement
         raise NotImplementedError()
+
+    def test_custom_module(self):
+        class CustomModule(dspy.Module):
+            def __init__(self):
+                super().__init__()
+                self.prog = dspy.Predict("question -> answer")
+
+            def forward(self, question):
+                return self.prog(question=question)
+
+        custom_module = CustomModule()
+        prediction = custom_module(question=QUESTION)
+        # print(prediction)
+
+        self.assertEqual(1, len(prediction))
+        self.assertEqual("Berlin", prediction.answer)
 
 
 if __name__ == '__main__':
