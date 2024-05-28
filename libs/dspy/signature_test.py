@@ -4,7 +4,7 @@ from unittest import TestCase
 import dspy
 from pydantic import BaseModel, Field
 
-from model import get_lm
+from libs.dspy.utils.model import get_lm
 
 QUESTION = "What is the capital of Germany?"
 

@@ -2,7 +2,7 @@ import unittest
 
 import dspy
 
-from libs.dspy.model import get_lm
+from libs.dspy.utils.model import get_lm
 
 
 class TestRetrieve(unittest.TestCase):

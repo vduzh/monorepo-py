@@ -5,8 +5,8 @@ from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
 from dspy.evaluate import Evaluate
 from dspy.teleprompt import BootstrapFewShot
 
-from libs.dspy.model import get_lm
-from libs.dspy.simple_program import SimpleProgram
+from libs.dspy.utils.model import get_lm
+from libs.dspy.utils.simple_program import SimpleProgram
 
 
 class TestEvaluate(unittest.TestCase):

@@ -6,7 +6,7 @@ from dspy.datasets import HotPotQA
 from dspy.evaluate import answer_exact_match, answer_passage_match, Evaluate
 from dspy.teleprompt import BootstrapFewShot
 
-from libs.dspy.model import get_lm
+from libs.dspy.utils.model import get_lm
 
 
 class TestRag(unittest.TestCase):
