@@ -100,11 +100,16 @@ class TestModule(TestCase):
         prediction = custom_module(question=QUESTION)
         # print(prediction)
 
+        # Inspect the Model's History
+        turbo.inspect_history(n=1)
+
+
         # 4. Access the output.
         answer = prediction.answer
 
         # Assert the answer
         self.assertEqual("Berlin", answer)
+
 
 
 if __name__ == '__main__':

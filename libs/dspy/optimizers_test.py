@@ -41,6 +41,10 @@ class TestOptimizers(unittest.TestCase):
         result = compiled_program(question=QUESTION)
         print(result)
 
+        # Inspect the last prompt for the LM
+        print("\n\n=== Inspect the last prompt for the LM ===")
+        dspy.settings.lm.inspect_history(n=1)
+
         # Assert the result
         self.assertEqual(2, len(result))
         self.assertEqual(ANSWER, result.answer)
