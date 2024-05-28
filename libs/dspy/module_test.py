@@ -88,7 +88,11 @@ class TestModule(TestCase):
         class CustomModule(dspy.Module):
             def __init__(self):
                 super().__init__()
+                # Start with just a single dspy.ChainofThought module
                 self.prog = dspy.ChainOfThought("question -> answer")
+
+                # Add complexity incrementally as you go
+                # some other llm calls
 
             def forward(self, question):
                 return self.prog(question=question)
@@ -108,7 +112,6 @@ class TestModule(TestCase):
 
         # Assert the answer
         self.assertEqual("Berlin", answer)
-
 
 
 if __name__ == '__main__':
