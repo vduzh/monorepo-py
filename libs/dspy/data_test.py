@@ -3,6 +3,7 @@ import unittest
 import dspy
 from dspy import Example
 from dspy.datasets import HotPotQA
+from dspy.datasets.gsm8k import GSM8K
 
 
 def print_example(title: str, example: Example):
@@ -83,6 +84,23 @@ class TestData(unittest.TestCase):
 
         test_example = test_set[0]
         print_example("Test example:", test_example)
+
+    def test_gsm8k_data_set(self):
+        # Load math questions from the GSM8K dataset
+        data_set = GSM8K()
+
+        print_example("data_set::train:example", data_set.train[0])
+        print_example("data_set::dev:example", data_set.dev[0])
+
+        # # Tell DSPy that the 'question' field is the input. Any other fields are labels and/or metadata.
+        train_set = [x.with_inputs('question') for x in data_set.train]
+        dev_set = [x.with_inputs('question') for x in data_set.dev]
+
+        train_example = train_set[0]
+        print_example("Train example:", train_example)
+
+        dev_example = dev_set[0]
+        print_example("Dev example:", dev_example)
 
 
 if __name__ == '__main__':
