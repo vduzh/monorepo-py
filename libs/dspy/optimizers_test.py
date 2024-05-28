@@ -1,26 +1,55 @@
 import unittest
 from pprint import pprint
 
-from dspy.teleprompt import BootstrapFewShotWithRandomSearch
+import dspy
+from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
+from dspy.teleprompt import BootstrapFewShotWithRandomSearch, BootstrapFewShot
+
+from libs.dspy.constants import QUESTION, ANSWER
+from libs.dspy.model import get_lm
+from libs.dspy.simple_program import SimpleProgram
 
 
 class TestOptimizers(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls._foo = "foo"
+        lm = get_lm()
+        dspy.settings.configure(lm=lm)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._foo = None
+    def test_compile_program(self):
+        # Load math questions from the GSM8K dataset
+        gsm8k = GSM8K()
+        # Create the train and dev sets
+        gsm8k_train_set, gsm8k_dev_set = gsm8k.train[:10], gsm8k.dev[:10]
 
-    def setUp(self):
-        self._bar = "bar"
+        # Set up the optimizer: we want to "bootstrap" (i.e., self-generate) 4-shot examples of the program.
+        config = dict(
+            max_bootstrapped_demos=4,
+            max_labeled_demos=4
+        )
+        # Optimize!
+        # Use the `gsm8k_metric` here. In general, the metric is going to tell the optimizer how well it's doing.
+        teleprompter = BootstrapFewShot(metric=gsm8k_metric, **config)
 
-    def tearDown(self):
-        self._bar = None
+        # Compile (optimize) the DSPy program
+        compiled_program = teleprompter.compile(
+            SimpleProgram(),
+            trainset=gsm8k_train_set
+        )
+
+        # Call the program with input argument
+        result = compiled_program(question=QUESTION)
+        print(result)
+
+        # Assert the result
+        self.assertEqual(2, len(result))
+        self.assertEqual(ANSWER, result.answer)
 
     def test_bootstrap_few_shot(self):
         """If you have very little data, e.g. 10 examples of your task"""
+
+        # the BootstrapFewShot is not an optimizing teleprompter
+
         pprint("Testing foo")
         self.assertTrue(True)
 
