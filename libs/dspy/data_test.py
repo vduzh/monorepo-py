@@ -1,8 +1,12 @@
 import unittest
+from pprint import pprint
 
 import dspy
+import pandas as pd
 from dspy import Example
 from dspy.datasets import HotPotQA
+from dspy.datasets.colors import Colors
+from dspy.datasets.dataset import Dataset
 from dspy.datasets.gsm8k import GSM8K
 
 
@@ -21,43 +25,66 @@ class TestData(unittest.TestCase):
         example = dspy.Example(foo="Foo", bar="Bar")
         print(example)
 
+        for k, v in example.items():
+            print(f"{k} = {v}")
+
         self.assertEqual("Foo", example.foo)
         self.assertEqual("Bar", example.bar)
 
     def test_example_with_inputs(self):
-        qa_example = dspy.Example(question="This is a question?", answer="This is an answer.")
+        """with_inputs marks specific fields as inputs"""
+
+        # test data
+        example = dspy.Example(question="This is a question?", answer="This is an answer.")
+        print("DataSet Entry:", example)
 
         # Single Input
-        s_input_example = qa_example.with_inputs("question")
-        print(s_input_example)
+        single_input_example = example.with_inputs("question")
+        print("Single Input:", single_input_example)
 
         # Multiple Input
-        m_input_example = qa_example.with_inputs("question", "answer")
-        print(m_input_example)
+        multiple_input_example = example.with_inputs("question", "answer")
+        print("Multiple Input:", multiple_input_example)
 
-        # Inputs
-        input_keys_example = s_input_example.inputs()
-        print(input_keys_example)
+    def test_example_inputs_and_labels(self):
+        # Init test data
+        example = dspy.Example(
+            context="This some context",
+            question="This is a question?",
+            answer="This is an answer."
+        )
+
+        # Build an example with the inputs specified
+        input_example = example.with_inputs("context", "question")
+        print("Example with inputs:", input_example)
+
+        # Creates an examples with only 2 inputs specified above
+        input_keys_example = input_example.inputs()
+        print("Only inputs:", input_keys_example)
+
+        self.assertIsNotNone(input_keys_example.context)
         self.assertIsNotNone(input_keys_example.question)
         self.assertIsNone(input_keys_example.get("answer"))
 
-        # Labels
-        label_keys_example = s_input_example.labels()
-        print(label_keys_example)
-        self.assertIsNotNone(label_keys_example.answer)
-        self.assertIsNone(label_keys_example.get("question"))
+        # Creates an examples with one inputs specified above
+        label_keys_example = input_example.labels()
+        print("Only labels:", label_keys_example)
 
-    def test_training_set(self):
+        self.assertIsNone(label_keys_example.get("context"))
+        self.assertIsNone(label_keys_example.get("question"))
+        self.assertIsNotNone(label_keys_example.answer)
+
+    def test_data_set(self):
+        # Dataset is just a list of Example objects
         train_set = [
             dspy.Example(report="Long report 1", summary="Short summary 1"),
             dspy.Example(report="Long report 2", summary="Short summary 2"),
         ]
         print(train_set)
 
-    def test_data_set(self):
-        raise NotImplementedError()
+    def test_built_in_hot_pot_qa_data_set(self):
+        """HotPotQA is a collection of question-answer pairs"""
 
-    def test_hot_pot_qa_data_set(self):
         # Load the dataset with data and addition labels from Wikipedia
         data_set = HotPotQA(
             train_seed=1,
@@ -67,40 +94,55 @@ class TestData(unittest.TestCase):
             test_size=5,
         )
 
-        print_example("data_set::train:example", data_set.train[0])
-        print_example("data_set::dev:example", data_set.dev[0])
-        print_example("data_set::test:example", data_set.test[0])
+        train_set, dev_set, test_set = data_set.train, data_set.dev, data_set.test
+        print_example("Train set example:", train_set[0])
+        print_example("Dev set example:", dev_set[0])
+        print_example("Test set example:", test_set[0])
 
-        # Tell DSPy that the 'question' field is the input. Any other fields are labels and/or metadata.
-        train_set = [x.with_inputs('question') for x in data_set.train]
-        dev_set = [x.with_inputs('question') for x in data_set.dev]
-        test_set = [x.with_inputs('question') for x in data_set.test]
-
-        train_example = train_set[0]
-        print_example("Train example:", train_example)
-
-        dev_example = dev_set[0]
-        print_example("Dev example:", dev_example)
-
-        test_example = test_set[0]
-        print_example("Test example:", test_example)
-
-    def test_gsm8k_data_set(self):
+    def test_built_in_gsm8k_data_set(self):
         # Load math questions from the GSM8K dataset
         data_set = GSM8K()
 
-        print_example("data_set::train:example", data_set.train[0])
-        print_example("data_set::dev:example", data_set.dev[0])
+        train_set, dev_set, test_set = data_set.train, data_set.dev, data_set.test
+        print_example("Train set example:", train_set[0])
+        print_example("Dev set example:", dev_set[0])
+        print_example("Test set example:", test_set[0])
 
-        # # Tell DSPy that the 'question' field is the input. Any other fields are labels and/or metadata.
-        train_set = [x.with_inputs('question') for x in data_set.train]
-        dev_set = [x.with_inputs('question') for x in data_set.dev]
+    def test_built_in_color_data_set(self):
+        # Load  questions from the Colors dataset
+        data_set = Colors()
 
-        train_example = train_set[0]
-        print_example("Train example:", train_example)
+        train_set, dev_set = data_set.train, data_set.dev
+        print_example("Train set example:", train_set[0])
+        print_example("Dev set example:", dev_set[0])
 
-        dev_example = dev_set[0]
-        print_example("Dev example:", dev_example)
+    def test_custom_data_set_recommended(self):
+        # Load data from the source
+        data_frame = pd.read_csv("./data/custom_data_set.csv")
+
+        # Formulate the loaded data into a Python list
+        dataset = []
+        for context, question, answer in data_frame.values:
+            dataset.append(dspy.Example(context=context, question=question, answer=answer))
+        pprint(dataset)
+
+        self.assertEqual(2, len(dataset))
+
+    def test_custom_data_set_advanced(self):
+        # Using the Dataset class
+        class CustomDataset(Dataset):
+            def __init__(self, file_path, *args, **kwargs) -> None:
+                super().__init__(*args, **kwargs)
+
+                df = pd.read_csv(file_path)
+
+                self._train = df.iloc[0:2].to_dict(orient='records')
+                self._dev = df.iloc[2:].to_dict(orient='records')
+
+        # Load the dataset
+        dataset = CustomDataset("./data/custom_data_set.csv")
+        print("Train dataset:", dataset.train)
+        print("Dev dataset:", dataset.dev)
 
 
 if __name__ == '__main__':
