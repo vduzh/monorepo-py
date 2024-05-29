@@ -47,6 +47,7 @@ class TestWorkingExample(TestCase):
         optimized_cot = teleprompter.compile(
             CoT(),
             trainset=self.gsm8k_train_set,
+            # TODO: do wee need the valset during compilation
             valset=self.gsm8k_dev_set
         )
 
