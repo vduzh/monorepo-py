@@ -37,7 +37,19 @@ class TestOptimizers(unittest.TestCase):
             trainset=gsm8k_train_set
         )
 
-        # Call the program with input argument
+        # Save the program to the file
+        compiled_program.save("./tmp/compiled_simple_program.json")  # os.path.join()
+
+    def test_load_compiled_program(self):
+        """Load the program from the file and used for inference"""
+
+        # 1. Instantiate an object from the class
+        compiled_program = SimpleProgram()
+
+        # 2. Call the load method on the object
+        compiled_program.load(path="./data/compiled_simple_program.json")
+
+        # 3. Call the program with input argument for inference.
         result = compiled_program(question=QUESTION)
         print(result)
 
@@ -54,8 +66,9 @@ class TestOptimizers(unittest.TestCase):
 
         # the BootstrapFewShot is not an optimizing teleprompter
 
-        pprint("Testing foo")
-        self.assertTrue(True)
+        # See test_compile_program
+
+        pass
 
     def test_bootstrap_few_shot_with_random_search(self):
         """If you have slightly more data, e.g. 50 examples of your task"""
