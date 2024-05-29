@@ -1,3 +1,4 @@
+import os.path
 import unittest
 from pprint import pprint
 
@@ -38,7 +39,7 @@ class TestOptimizers(unittest.TestCase):
         )
 
         # Save the program to the file
-        compiled_program.save("./tmp/compiled_simple_program.json")  # os.path.join()
+        compiled_program.save(os.path.relpath("tmp/compiled_simple_program.json"))
 
     def test_load_compiled_program(self):
         """Load the program from the file and used for inference"""
@@ -47,7 +48,7 @@ class TestOptimizers(unittest.TestCase):
         compiled_program = SimpleProgram()
 
         # 2. Call the load method on the object
-        compiled_program.load(path="./data/compiled_simple_program.json")
+        compiled_program.load(path=os.path.relpath("data/compiled_simple_program.json"))
 
         # 3. Call the program with input argument for inference.
         result = compiled_program(question=QUESTION)
