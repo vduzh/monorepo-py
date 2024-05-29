@@ -1,3 +1,4 @@
+import os.path
 import unittest
 from pprint import pprint
 
@@ -16,79 +17,48 @@ class TestOptimizers(unittest.TestCase):
         lm = get_lm()
         dspy.settings.configure(lm=lm)
 
-    def test_compile_program(self):
         # Load math questions from the GSM8K dataset
-        gsm8k = GSM8K()
-        # Create the train and dev sets
-        gsm8k_train_set, gsm8k_dev_set = gsm8k.train[:10], gsm8k.dev[:10]
+        cls.gsm8k = GSM8K()
 
-        # Set up the optimizer: we want to "bootstrap" (i.e., self-generate) 4-shot examples of the program.
-        config = dict(
-            max_bootstrapped_demos=4,
-            max_labeled_demos=4
-        )
-        # Optimize!
-        # Use the `gsm8k_metric` here. In general, the metric is going to tell the optimizer how well it's doing.
-        teleprompter = BootstrapFewShot(metric=gsm8k_metric, **config)
-
-        # Compile (optimize) the DSPy program
-        compiled_program = teleprompter.compile(
-            SimpleProgram(),
-            trainset=gsm8k_train_set
-        )
-
-        # Save the program to the file
-        compiled_program.save("./tmp/compiled_simple_program.json")  # os.path.join()
-
-    def test_load_compiled_program(self):
-        """Load the program from the file and used for inference"""
-
-        # 1. Instantiate an object from the class
-        compiled_program = SimpleProgram()
-
-        # 2. Call the load method on the object
-        compiled_program.load(path="./data/compiled_simple_program.json")
-
-        # 3. Call the program with input argument for inference.
-        result = compiled_program(question=QUESTION)
-        print(result)
-
-        # Inspect the last prompt for the LM
-        print("\n\n=== Inspect the last prompt for the LM ===")
-        dspy.settings.lm.inspect_history(n=1)
-
-        # Assert the result
-        self.assertEqual(2, len(result))
-        self.assertEqual(ANSWER, result.answer)
+    def test_labeled_few_shot(self):
+        pass
 
     def test_bootstrap_few_shot(self):
-        """If you have very little data, e.g. 10 examples of your task"""
+        """ If you have very little data, e.g. 10 examples of your task."""
 
-        # the BootstrapFewShot is not an optimizing teleprompter
+        # Specify the metric to use
+        metric = gsm8k_metric
 
-        # See test_compile_program
+        # Create the optimizer configuration
+        config = dict(
+            # bootstraps 8-shot examples of the program
+            max_bootstrapped_demos=8,
+            # the number of demonstrations randomly selected from the trainset
+            max_labeled_demos=8
+        )
 
-        pass
+        #  Instantiate an optimizer with the metric and config
+        optimizer = BootstrapFewShot(metric=metric, **config)
+
+        #  Apply the optimizer
+        train_set = self.gsm8k.train[:10]
+        optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
 
     def test_bootstrap_few_shot_with_random_search(self):
         """If you have slightly more data, e.g. 50 examples of your task"""
 
         # Set up the optimizer: we want to "bootstrap" (i.e., self-generate) 8-shot examples of your program's steps.
-        # The optimizer will repeat this 10 times (plus some initial attempts) before selecting its best attempt on the devset.
-        config = dict(max_bootstrapped_demos=3, max_labeled_demos=3, num_candidate_programs=10, num_threads=4)
+        # The optimizer will repeat this 10 times (plus some initial attempts) before selecting its best attempt on
+        # the dev set.
+        config = dict(
+            max_bootstrapped_demos=3,
+            max_labeled_demos=3,
+            num_candidate_programs=10,
+            num_threads=4
+        )
 
-        teleprompter = BootstrapFewShotWithRandomSearch(metric=YOUR_METRIC_HERE, **config)
-        optimized_program = teleprompter.compile(YOUR_PROGRAM_HERE, trainset=YOUR_TRAINSET_HERE)
-
-        pprint("Testing foo")
-        self.assertTrue(True)
-
-        # Saving a program
-        optimized_program.save(YOUR_SAVE_PATH)
-
-        # Loading a program
-        loaded_program = YOUR_PROGRAM_CLASS()
-        loaded_program.load(path=YOUR_SAVE_PATH)
+        # Instantiate an object from the class
+        optimizer = BootstrapFewShotWithRandomSearch(metric=gsm8k_metric, **config)
 
     def test_mipro(self):
         """If you have more data than that, e.g. 300 examples or more"""
@@ -102,6 +72,42 @@ class TestOptimizers(unittest.TestCase):
         """
         pprint("Testing foo")
         self.assertTrue(True)
+
+    def test_compile_and_save_program(self):
+        """Optimize the program and save the results to the file"""
+
+        # 1. Create a train sets from the gsm8k data set
+        train_set = self.gsm8k.train[:10]
+
+        # 2. Set up the optimizer
+        optimizer = BootstrapFewShot(metric=gsm8k_metric, max_bootstrapped_demos=4, max_labeled_demos=4)
+
+        # 3. Compile (optimize) the DSPy program
+        optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
+
+        # 4. Save the program to the file
+        optimized_program.save(os.path.relpath("tmp/optimized_simple_program.json"))
+
+    def test_load_optimized_program(self):
+        """Load the program from the file and used for inference"""
+
+        # 1. Instantiate an object from the class
+        program = SimpleProgram()
+
+        # 2. Call the load method on the object
+        program.load(path=os.path.relpath("data/optimized_simple_program.json"))
+
+        # 3. Call the program with input argument for inference.
+        result = program(question=QUESTION)
+
+        # Inspect the last prompt for the LM
+        dspy.settings.lm.inspect_history(n=1)
+        # Print the result
+        print("Result:", result)
+
+        # Assert the result
+        self.assertEqual(2, len(result))
+        self.assertEqual(ANSWER, result.answer)
 
 
 if __name__ == '__main__':
