@@ -40,9 +40,9 @@ class TestOptimizers(unittest.TestCase):
         #  Instantiate an optimizer with the metric and config
         optimizer = BootstrapFewShot(metric=metric, **config)
 
-        #  Apply the optimizer
-        train_set = self.gsm8k.train[:10]
-        optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
+        # Optimize the program
+        # train_set = self.gsm8k.train[:10]
+        # optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
 
     def test_bootstrap_few_shot_with_random_search(self):
         """If you have slightly more data, e.g. 50 examples of your task"""
@@ -60,9 +60,12 @@ class TestOptimizers(unittest.TestCase):
         # Instantiate an object from the class
         optimizer = BootstrapFewShotWithRandomSearch(metric=gsm8k_metric, **config)
 
-        #  Apply the optimizer
+        # Optimize the program
         train_set = self.gsm8k.train[:50]
         optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
+
+        # result = optimized_program(question=MATH_QUESTION)
+        # print("Result:", result)
 
     def test_mipro(self):
         """If you have more data than that, e.g. 300 examples or more"""
