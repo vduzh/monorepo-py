@@ -4,7 +4,7 @@ from pprint import pprint
 import dspy
 import pandas as pd
 from dspy import Example
-from dspy.datasets import HotPotQA
+from dspy.datasets import HotPotQA, DataLoader
 from dspy.datasets.colors import Colors
 from dspy.datasets.dataset import Dataset
 from dspy.datasets.gsm8k import GSM8K
@@ -143,6 +143,27 @@ class TestData(unittest.TestCase):
         dataset = CustomDataset("./data/custom_data_set.csv")
         print("Train dataset:", dataset.train)
         print("Dev dataset:", dataset.dev)
+
+    def test_data_loader_from_huggingface(self):
+        dl = DataLoader()
+
+        # load all the data set
+        data_set = dl.from_huggingface("HuggingFaceH4/CodeAlpaca_20K")
+        print("All -> Train set: {}, Test set: {}".format(len(data_set["train"]), len(data_set["test"])))
+
+        # load specific split
+        data_set = dl.from_huggingface(
+            "HuggingFaceH4/CodeAlpaca_20K",
+            split=["train"]
+        )
+        print("Split -> Train set: {}".format(len(data_set["train"])))
+
+        # load 10% of the specific split
+        data_set_list = dl.from_huggingface(
+            "HuggingFaceH4/CodeAlpaca_20K",
+            split="train[:10%]"
+        )
+        print("Split -> Train 10% set: {}".format(len(data_set_list)))
 
 
 if __name__ == '__main__':
