@@ -57,25 +57,51 @@ class TestModule(TestCase):
     def test_built_in_chain_of_thought_module(self):
         qa_module = dspy.ChainOfThought("question -> answer")
 
-        res = qa_module(question=QUESTION)
-        print("rationale:", res.rationale)
-        print("answer:", res.answer)
+        prediction = qa_module(question=QUESTION)
+        print("rationale:", prediction.rationale)
+        print("answer:", prediction.answer)
 
-        self.assertEqual(2, len(res))
-        self.assertIsNotNone(res.rationale)
-        self.assertEqual("Berlin", res.answer)
+        self.assertEqual(2, len(prediction))
+        self.assertIsNotNone(prediction.rationale)
+        self.assertEqual("Berlin", prediction.answer)
+
+    def test_built_in_chain_of_thought_with_hint(self):
+        generate_answer = dspy.ChainOfThoughtWithHint("question -> answer")
+
+        # Call the predictor on a particular input alongside a hint.
+        prediction = generate_answer(
+            question="What is the color of the sky?",
+            hint="It's what you often see during a sunny day."
+        )
+        print(prediction)
+
+        self.assertEqual(2, len(prediction))
+        self.assertIsNotNone(prediction.rationale)
+        self.assertIsNotNone(prediction.answer)
 
     def test_built_in_program_of_thought_module(self):
-        module = dspy.ProgramOfThought("question -> answer")
+        pot = dspy.ProgramOfThought("question -> answer")
 
-        # TODO:implement
-        raise NotImplementedError()
+        prediction = pot(
+            question="Sarah has 5 apples. She buys 7 more apples from the store. How many apples does Sarah have now?"
+        )
+        print(prediction)
+
+        self.assertEqual(2, len(prediction))
+        self.assertIsNotNone(prediction.rationale)
+        self.assertIsNotNone(prediction.answer)
 
     def test_built_in_re_act_module(self):
-        module = dspy.ReAct("question -> answer")
+        react_module = dspy.ReAct("question -> answer")
 
-        # TODO:implement
-        raise NotImplementedError()
+        prediction = react_module(
+            question='Sarah has 5 apples. She buys 7 more apples from the store. How many apples does Sarah have now?'
+        )
+        print(prediction)
+
+        self.assertEqual(2, len(prediction))
+        self.assertIsNotNone(prediction.rationale)
+        self.assertIsNotNone(prediction.answer)
 
     def test_built_in_multi_chain_comparison_module(self):
         module = dspy.MultiChainComparison("question -> answer")
