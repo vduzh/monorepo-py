@@ -6,7 +6,7 @@ import dspy
 from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
 from dspy.teleprompt import BootstrapFewShotWithRandomSearch, BootstrapFewShot
 
-from libs.dspy.utils.constants import QUESTION, ANSWER
+from libs.dspy.utils.constants import MATH_QUESTION, MATH_ANSWER
 from libs.dspy.utils.model import get_lm
 from libs.dspy.utils.simple_program import SimpleProgram
 
@@ -31,10 +31,10 @@ class TestOptimizers(unittest.TestCase):
 
         # Create the optimizer configuration
         config = dict(
-            # bootstraps 8-shot examples of the program
-            max_bootstrapped_demos=8,
+            # bootstraps 4-shot examples of the program
+            max_bootstrapped_demos=4,
             # the number of demonstrations randomly selected from the trainset
-            max_labeled_demos=8
+            max_labeled_demos=4
         )
 
         #  Instantiate an optimizer with the metric and config
@@ -51,14 +51,18 @@ class TestOptimizers(unittest.TestCase):
         # The optimizer will repeat this 10 times (plus some initial attempts) before selecting its best attempt on
         # the dev set.
         config = dict(
-            max_bootstrapped_demos=3,
-            max_labeled_demos=3,
+            max_bootstrapped_demos=4,
+            max_labeled_demos=4,
             num_candidate_programs=10,
             num_threads=4
         )
 
         # Instantiate an object from the class
         optimizer = BootstrapFewShotWithRandomSearch(metric=gsm8k_metric, **config)
+
+        #  Apply the optimizer
+        train_set = self.gsm8k.train[:50]
+        optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
 
     def test_mipro(self):
         """If you have more data than that, e.g. 300 examples or more"""
@@ -98,7 +102,7 @@ class TestOptimizers(unittest.TestCase):
         program.load(path=os.path.relpath("data/optimized_simple_program.json"))
 
         # 3. Call the program with input argument for inference.
-        result = program(question=QUESTION)
+        result = program(question=MATH_QUESTION)
 
         # Inspect the last prompt for the LM
         dspy.settings.lm.inspect_history(n=1)
@@ -107,7 +111,7 @@ class TestOptimizers(unittest.TestCase):
 
         # Assert the result
         self.assertEqual(2, len(result))
-        self.assertEqual(ANSWER, result.answer)
+        self.assertEqual(MATH_ANSWER, result.answer)
 
 
 if __name__ == '__main__':
