@@ -4,7 +4,7 @@ from pprint import pprint
 
 import dspy
 from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
-from dspy.teleprompt import BootstrapFewShotWithRandomSearch, BootstrapFewShot
+from dspy.teleprompt import BootstrapFewShotWithRandomSearch, BootstrapFewShot, LabeledFewShot
 
 from libs.dspy.utils.constants import MATH_QUESTION, MATH_ANSWER
 from libs.dspy.utils.model import get_lm
@@ -21,7 +21,16 @@ class TestOptimizers(unittest.TestCase):
         cls.gsm8k = GSM8K()
 
     def test_labeled_few_shot(self):
-        pass
+        optimizer = LabeledFewShot(k=8)
+
+        # Optimize the program
+        train_set = self.gsm8k.train[:10]
+        optimized_program = optimizer.compile(SimpleProgram(), trainset=train_set)
+
+        # Call the optimized program
+        prediction = optimized_program(question=MATH_QUESTION)
+        print("Result:", prediction)
+        self.assertEqual("12", prediction.answer)
 
     def test_bootstrap_few_shot(self):
         """ If you have very little data, e.g. 10 examples of your task."""
