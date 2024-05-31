@@ -1,21 +1,12 @@
 import os
 
 import dspy
-from dspy.evaluate import answer_exact_match, answer_passage_match
 from dspy.teleprompt import BootstrapFewShot
 
 from projects.llm_rag_facts_dspy.config.dataset import get_trainset
 from projects.llm_rag_facts_dspy.config.lm import get_lm
-from projects.llm_rag_facts_dspy.programs.rag_program import RagProgram
 from projects.llm_rag_facts_dspy.config.rm import get_rm
-
-
-# Validation logic: check that the predicted answer is correct.
-# Also check that the retrieved context does actually contain that answer.
-def validate_context_and_answer(example, pred, trace=None):
-    answer_em = answer_exact_match(example, pred)
-    answer_pm = answer_passage_match(example, pred)
-    return answer_em and answer_pm
+from projects.llm_rag_facts_dspy.programs.rag_program import RagProgram
 
 
 class Optimizer:
