@@ -9,6 +9,16 @@ from dspy.teleprompt import BootstrapFewShot
 from libs.dspy.utils.model import get_lm
 
 
+# Define the signature
+class GenerateAnswer(dspy.Signature):
+    """Answer questions with short factoid answers."""
+
+    context = dspy.InputField(desc="may contain relevant facts")
+    question = dspy.InputField()
+
+    answer = dspy.OutputField(desc="often between 1 and 5 words")
+
+
 class TestRag(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -45,22 +55,15 @@ class TestRag(unittest.TestCase):
         print(f"Relevant Wikipedia Titles: {dev_example.gold_titles}")
 
     def test_single_search_query(self):
-        # Define the signature
-        class GenerateAnswer(dspy.Signature):
-            """Answer questions with short factoid answers."""
-
-            context = dspy.InputField(desc="may contain relevant facts")
-            question = dspy.InputField()
-
-            answer = dspy.OutputField(desc="often between 1 and 5 words")
 
         # Build the Pipeline as a DSPy module
         class RagProgram(dspy.Module):
 
             def __init__(self, num_passages=3):
                 super().__init__()
-
+                # create a retriever
                 self.retrieve = dspy.Retrieve(k=num_passages)
+                # create an object to call llm
                 self.generate_answer = dspy.ChainOfThought(GenerateAnswer)
 
             def forward(self, question):
@@ -86,13 +89,13 @@ class TestRag(unittest.TestCase):
         teleprompter = BootstrapFewShot(metric=validate_context_and_answer)
 
         # Compile the RAG program
-        compiled_rag = teleprompter.compile(RagProgram(), trainset=self.train_set)
+        optimized_rag = teleprompter.compile(RagProgram(), trainset=self.train_set)
 
         # Ask any question you like to this simple RAG program.
         my_question = "What castle did David Gregory inherit?"
 
         # Get the prediction. This contains `pred.context` and `pred.answer`.
-        prediction = compiled_rag(my_question)
+        prediction = optimized_rag(my_question)
 
         # Print the contexts and the answer.
         print(f"Question: {my_question}")
@@ -112,9 +115,9 @@ class TestRag(unittest.TestCase):
             display_table=5
         )
 
-        # Evaluate the `compiled_rag` program with the `answer_exact_match` metric.
+        # Evaluate the `optimized_rag` program with the `answer_exact_match` metric.
         metric = answer_exact_match
-        evaluate_on_hotpot_qa(compiled_rag, metric=metric)
+        evaluate_on_hotpot_qa(optimized_rag, metric=metric)
 
         # Evaluating the Retrieval
         def gold_passages_retrieved(example, pred, trace=None):
@@ -123,17 +126,9 @@ class TestRag(unittest.TestCase):
 
             return gold_titles.issubset(found_titles)
 
-        compiled_rag_retrieval_score = evaluate_on_hotpot_qa(compiled_rag, metric=gold_passages_retrieved)
+        optimized_rag_retrieval_score = evaluate_on_hotpot_qa(optimized_rag, metric=gold_passages_retrieved)
 
     def test_multi_hop_question_answering(self):
-        class GenerateAnswer(dspy.Signature):
-            """Answer questions with short factoid answers."""
-
-            context = dspy.InputField(desc="may contain relevant facts")
-            question = dspy.InputField()
-
-            answer = dspy.OutputField(desc="often between 1 and 5 words")
-
         class GenerateSearchQuery(dspy.Signature):
             """Write a simple search query that will help answer a complex question"""
 
