@@ -2,7 +2,7 @@ import unittest
 
 import dspy
 from dspy.datasets.gsm8k import GSM8K, gsm8k_metric
-from dspy.evaluate import Evaluate
+from dspy.evaluate import Evaluate, answer_exact_match
 from dspy.teleprompt import BootstrapFewShot
 
 from libs.dspy.utils.model import get_lm
@@ -18,6 +18,25 @@ class TestEvaluate(unittest.TestCase):
         # Load math questions from the GSM8K dataset
         gsm8k = GSM8K()
         cls.gsm8k_train_set, cls.gsm8k_dev_set = gsm8k.train[:10], gsm8k.dev[:10]
+
+    def test_custom_evaluation(self):
+        # Compose a development set
+        dev_set = [
+            dspy.Example(question="What is the capital of Germany?", answer="Berlin").with_inputs("question"),
+            dspy.Example(question="What is the capital of Great Britain?", answer="London").with_inputs("question"),
+        ]
+
+        # Create a program instance
+        program = SimpleProgram()
+
+        # Evaluate
+        scores = []
+        for example in dev_set:
+            pred = program(**example.inputs())
+            score = answer_exact_match(example, pred)
+            scores.append(score)
+
+        print("Custom evaluation scores:", scores)
 
     def test_evaluate_program(self):
         # Create a program
