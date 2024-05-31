@@ -9,7 +9,8 @@ requirements.txt
 info/
 .env
 cache
-**/libs/dspy/*.log
+**/*.log
+
 
 # tmp files
 # exclude everything
