@@ -5,3 +5,7 @@ dataset = HotPotQA(train_seed=1, train_size=20, eval_seed=2023, dev_size=50, tes
 
 def get_trainset():
     return [x.with_inputs('question') for x in dataset.train]
+
+
+def get_devset():
+    return [x.with_inputs('question') for x in dataset.dev]
