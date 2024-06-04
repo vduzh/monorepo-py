@@ -13,7 +13,7 @@ def main():
     with dspy.context(lm=get_lm(), rm=get_rm()):
         # Load optimized program
         program = RagProgram()
-        program.load(path=os.path.relpath(f"data/{program.name}.json"))
+        program.load(path=os.path.join(os.path.dirname(__file__), "data", f"{program.name}.json"))
 
         while True:
             question = input("Enter your question or exit: ")

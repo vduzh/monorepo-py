@@ -5,6 +5,7 @@ from dspy.teleprompt import BootstrapFewShot
 
 from projects.llm_rag_facts_dspy.config.dataset import get_trainset
 from projects.llm_rag_facts_dspy.config.lm import get_lm
+from projects.llm_rag_facts_dspy.config.metric import validate_context_and_answer
 from projects.llm_rag_facts_dspy.config.rm import get_rm
 from projects.llm_rag_facts_dspy.programs.rag_program import RagProgram
 
@@ -41,7 +42,7 @@ def main():
             program,
             teleprompter,
             get_trainset(),
-            os.path.relpath(f"data/{program.name}.json")
+            os.path.join(os.path.dirname(__file__), "data", f"{program.name}.json")
         )
         optimizer()
 

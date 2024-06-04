@@ -16,7 +16,7 @@ def main():
     with dspy.context(lm=get_lm(), rm=get_rm()):
         # Load optimized program
         program = RagProgram()
-        program.load(path=os.path.relpath(f"data/{program.name}.json"))
+        program.load(path=os.path.join(os.path.dirname(__file__), "data", f"{program.name}.json"))
 
         # Set up the evaluator, which can be used multiple times.
         evaluate = Evaluate(

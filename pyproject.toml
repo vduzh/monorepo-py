@@ -16,6 +16,10 @@ llm_code_and_test_generator = "projects.llm_code_and_test_generator:main"
 llm_chatbot = "projects.llm_chatbot:main"
 llm_rag_facts = "projects.llm_rag_facts:main"
 llm_rag_facts_db = "projects.llm_rag_facts:db"
+llm_rag_facts_dspy_optimize = "projects.llm_rag_facts_dspy:optimize"
+llm_rag_facts_dspy_evaluate = "projects.llm_rag_facts_dspy:evaluate"
+llm_rag_facts_dspy_inference = "projects.llm_rag_facts_dspy:inference"
+
 
 [tool.poetry.dependencies]
 #python = "^3.11"
