@@ -7,6 +7,10 @@ class TestOs(unittest.TestCase):
         value = os.name
         print(value)
 
+    def test_path_expanduser(self):
+        str_value = os.path.expanduser('~')
+        print("user home:", str_value)
+
     def test_path_abspath(self):
         file_dir_name = os.path.abspath(__file__)
         print("Abs path:", file_dir_name)
