@@ -10,12 +10,14 @@ packages = [
 ]
 
 [tool.poetry.scripts]
+cli-click="projects.cli-click.cli:cli"
 web_flask = "projects.web_flask:main"
 llm_speach-to-text = "projects.llm_speach_to_text:main"
 llm_code_and_test_generator = "projects.llm_code_and_test_generator:main"
 llm_chatbot = "projects.llm_chatbot:main"
 llm_rag_facts = "projects.llm_rag_facts:main"
 llm_rag_facts_db = "projects.llm_rag_facts:db"
+llm_rag_facts_store_chromadb_langchain = "projects.llm_rag_facts_store_chromadb_langchain.cli:cli"
 llm_rag_facts_dspy_optimize = "projects.llm_rag_facts_dspy:optimize"
 llm_rag_facts_dspy_evaluate = "projects.llm_rag_facts_dspy:evaluate"
 llm_rag_facts_dspy_inference = "projects.llm_rag_facts_dspy:inference"
@@ -64,4 +66,6 @@ docker = "^7.0.0"
 pyyaml = "^6.0.1"
 beautifulsoup4 = "^4.12.3"
 lxml = "^5.2.1"
-pymilvus = "2.3.5"
+#pymilvus = "2.3.5"
+pymilvus = {extras = ["model"], version = "2.3.5"}
+click = "^8.1.7"
