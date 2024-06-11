@@ -1,14 +1,15 @@
 import unittest
+from pathlib import Path
 
 
 class TestPathlib(unittest.TestCase):
-    def test_path(self):
-        # print(__file__)
+    def test_home_dir(self):
+        home_dir = Path.home()
 
-        # value = platform.system()
-        # print(value)
+        print(home_dir)
 
-        pass
+        # file_path = home_dir / "example_directory" / "example_file.txt"
+        # print(file_path)
 
 
 if __name__ == '__main__':
