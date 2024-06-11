@@ -27,6 +27,7 @@ class RagProgram(dspy.Module):
     def forward(self, question):
         # search for the top-num_passages relevant passages
         context = self.retrieve(question).passages
+        print("context", context)
 
         # generate the answer
         prediction = self.generate_answer(context=context, question=question)
