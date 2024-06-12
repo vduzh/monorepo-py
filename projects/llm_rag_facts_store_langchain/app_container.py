@@ -10,20 +10,17 @@ class AppContainer(containers.DeclarativeContainer):
 
     lm = providers.Container(
         LanguageModelContainer,
-        # config=config.lm,
-        config=config,
+        config=config.lm,
     )
 
     store = providers.Container(
         VectorStoreContainer,
         lm_container=lm,
-        # config=config.vector_store,
-        config=config,
+        config=config.store,
     )
 
     services = providers.Container(
         ServicesContainer,
         vector_store_container=store,
-        # config=config.services,
-        config=config,
+        config=config.services,
     )
