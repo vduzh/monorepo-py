@@ -4,7 +4,7 @@ from dependency_injector import containers, providers
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
 
-from .documents_service import DocumentsService
+from projects.llm_rag_facts_store_chromadb_langchain.services.documents_service import DocumentsService
 
 
 class ServicesContainer(containers.DeclarativeContainer):
@@ -14,7 +14,7 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     text_loader = providers.Singleton(
         TextLoader,
-        file_path=os.path.join(os.path.dirname(__file__), "data", "facts.txt")
+        file_path=os.path.join(os.path.dirname(__file__), "../data", "facts.txt")
     )
 
     text_splitter = providers.Singleton(
