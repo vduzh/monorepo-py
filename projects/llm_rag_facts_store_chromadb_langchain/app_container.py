@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from .lm_container import LMContainer
+from .language_model_container import LanguageModelContainer
 from .services_container import ServicesContainer
 from .vector_store_container import VectorStoreContainer
 
@@ -8,22 +8,22 @@ from .vector_store_container import VectorStoreContainer
 class AppContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
 
-    lm_container = providers.Container(
-        LMContainer,
+    lm = providers.Container(
+        LanguageModelContainer,
         # config=config.lm,
         config=config,
     )
 
-    vector_store_container = providers.Container(
+    store = providers.Container(
         VectorStoreContainer,
-        lm_container=lm_container,
+        lm_container=lm,
         # config=config.vector_store,
         config=config,
     )
 
-    services_container = providers.Container(
+    services = providers.Container(
         ServicesContainer,
-        vector_store_container=vector_store_container,
+        vector_store_container=store,
         # config=config.services,
         config=config,
     )

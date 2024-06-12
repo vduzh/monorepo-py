@@ -22,7 +22,7 @@ def cli():
 
 @cli.command()
 @inject
-def load(documents_service: DocumentsService = Provide[AppContainer.services_container.documents_service]):
+def load(documents_service: DocumentsService = Provide[AppContainer.services.documents_service]):
     """Loads the document to the db."""
     click.echo(f"load command: loading....")
 

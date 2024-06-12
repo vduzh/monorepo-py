@@ -2,7 +2,7 @@ from dependency_injector import containers, providers
 from langchain_openai import OpenAIEmbeddings
 
 
-class LMContainer(containers.DeclarativeContainer):
+class LanguageModelContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
 
     embeddings = providers.Singleton(
