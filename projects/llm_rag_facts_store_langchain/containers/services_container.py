@@ -12,9 +12,14 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     vector_store_container = providers.DependenciesContainer()
 
-    text_loader = providers.Singleton(
+    local_text_loader = providers.Singleton(
         TextLoader,
         file_path=os.path.join(os.path.dirname(__file__), "../data", "facts.txt")
+    )
+
+    text_loader = providers.Selector(
+        config.documents_service.text_loader,
+        local=local_text_loader
     )
 
     character_text_splitter = providers.Singleton(

@@ -29,6 +29,8 @@ def cli():
         'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_SIZE', default=201)
     container.config.services.documents_service.character_text_splitter_chunk_overlap.from_env(
         'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_OVERLAP', default=0)
+    container.config.services.documents_service.text_loader.from_env(
+        'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_TEXT_LOADER', default='local')
     container.wire(modules=[__name__])
     # pass
 
