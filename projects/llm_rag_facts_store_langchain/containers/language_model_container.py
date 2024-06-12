@@ -7,7 +7,7 @@ class LanguageModelContainer(containers.DeclarativeContainer):
 
     openai_embeddings = providers.Singleton(
         OpenAIEmbeddings,
-        model=config.embedding_model_name
+        model=config.openai.embedding_model_name
     )
 
     embeddings = providers.Selector(
