@@ -17,11 +17,16 @@ class ServicesContainer(containers.DeclarativeContainer):
         file_path=os.path.join(os.path.dirname(__file__), "../data", "facts.txt")
     )
 
-    text_splitter = providers.Singleton(
+    character_text_splitter = providers.Singleton(
         CharacterTextSplitter,
         separator="\n",
-        chunk_size=200,
-        chunk_overlap=0
+        chunk_size=config.documents_service.character_text_splitter_chunk_size,
+        chunk_overlap=config.documents_service.character_text_splitter_chunk_overlap
+    )
+
+    text_splitter = providers.Selector(
+        config.documents_service.text_splitter,
+        character_text=character_text_splitter
     )
 
     documents_service = providers.Singleton(

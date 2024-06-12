@@ -17,9 +17,18 @@ def cli():
     container = AppContainer()
     container.config.lm.embeddings.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_EMBEDDINGS', default='openai')
     container.config.lm.openai.embedding_model_name.from_env("OPENAI_API_EMBEDDING_MODEL", required=True)
-    container.config.store.chromadb_client.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_CLIENT', default='in_memory')
-    container.config.store.chromadb_client_http_host.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_HTTP_CLIENT_HOST', default='localhost')
-    container.config.store.chromadb_client_http_port.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_HTTP_CLIENT_PORT', default="8000")
+    container.config.store.chromadb_client.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_CLIENT',
+                                                    default='in_memory')
+    container.config.store.chromadb_client_http_host.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_HTTP_CLIENT_HOST',
+                                                              default='localhost')
+    container.config.store.chromadb_client_http_port.from_env('LLM_RAG_FACTS_STORE_LANGCHAIN_CHROMADB_HTTP_CLIENT_PORT',
+                                                              default=8000)
+    container.config.services.documents_service.text_splitter.from_env(
+        'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_TEXT_SPLITTER', default='character_text')
+    container.config.services.documents_service.character_text_splitter_chunk_size.from_env(
+        'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_SIZE', default=201)
+    container.config.services.documents_service.character_text_splitter_chunk_overlap.from_env(
+        'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_OVERLAP', default=0)
     container.wire(modules=[__name__])
     # pass
 
