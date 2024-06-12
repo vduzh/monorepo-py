@@ -47,13 +47,13 @@ def init_container():
         f'{prefix}DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_OVERLAP',
         default=0
     )
-    container.config.services.documents_service.text_loader.from_env(
-        f'{prefix}DOCUMENTS_SERVICE_TEXT_LOADER',
-        # local and external supported
+    container.config.services.documents_service.documents_loader.from_env(
+        f'{prefix}DOCUMENTS_SERVICE_DOCUMENTS_LOADER',
+        # local and directory supported
         default='local'
     )
-    container.config.services.documents_service.external_text_loader_path.from_env(
-        f'{prefix}DOCUMENTS_SERVICE_EXTERNAL_TEXT_LOADER_PATH',
+    container.config.services.documents_service.directory_loader_path.from_env(
+        f'{prefix}DOCUMENTS_SERVICE_DIRECTORY_LOADER_PATH',
         default=os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_langchain", "documents", "facts_2.txt")
     )
 

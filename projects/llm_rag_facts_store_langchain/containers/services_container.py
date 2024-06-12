@@ -12,20 +12,21 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     vector_store_container = providers.DependenciesContainer()
 
-    local_text_loader = providers.Singleton(
+    text_loader = providers.Singleton(
         TextLoader,
         file_path=os.path.join(os.path.dirname(__file__), "../documents", "facts.txt")
     )
 
-    external_text_loader = providers.Singleton(
+    directory_loader = providers.Singleton(
+        # TODO: Apply the DirectoryLoader here!!!
         TextLoader,
-        file_path=config.documents_service.external_text_loader_path,
+        file_path=config.documents_service.directory_loader_path,
     )
 
-    text_loader = providers.Selector(
-        config.documents_service.text_loader,
-        local=local_text_loader,
-        external=external_text_loader
+    documents_loader = providers.Selector(
+        config.documents_service.documents_loader,
+        local=text_loader,
+        directory=directory_loader
     )
 
     character_text_splitter = providers.Singleton(
@@ -43,6 +44,6 @@ class ServicesContainer(containers.DeclarativeContainer):
     documents_service = providers.Singleton(
         DocumentsService,
         text_splitter=text_splitter,
-        text_loader=text_loader,
+        text_loader=documents_loader,
         vector_store=vector_store_container.vector_store
     )
