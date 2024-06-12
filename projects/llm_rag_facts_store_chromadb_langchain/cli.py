@@ -1,19 +1,34 @@
 import click
+from dependency_injector.wiring import Provide, inject
+from dotenv import load_dotenv
 
-from .core import load_documents
+from projects.llm_rag_facts_store_chromadb_langchain.app_container import AppContainer
+from projects.llm_rag_facts_store_chromadb_langchain.documents_service import DocumentsService
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 @click.group()
 def cli():
     """Simple CLI app"""
-    pass
+
+    # initialize the dependency injection container
+    container = AppContainer()
+    container.config.embedding_model_name.from_env("OPENAI_API_EMBEDDING_MODEL", required=True)
+    container.wire(modules=[__name__])
+    # pass
 
 
 @cli.command()
-def load():
+@inject
+def load(documents_service: DocumentsService = Provide[AppContainer.services_container.documents_service]):
     """Loads the document to the db."""
     click.echo(f"load command: loading....")
-    load_documents()
+
+    # load documents
+    documents_service.load()
+
     click.echo(f"load command: loaded!")
 
 

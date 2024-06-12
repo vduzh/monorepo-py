@@ -69,3 +69,4 @@ lxml = "^5.2.1"
 #pymilvus = "2.3.5"
 pymilvus = {extras = ["model"], version = "2.3.5"}
 click = "^8.1.7"
+dependency-injector = "^4.41.0"
