@@ -9,9 +9,8 @@ load_dotenv()
 
 
 def init_container():
-    """Simple CLI app"""
+    """Initialize the dependency injection container"""
 
-    # initialize the dependency injection container
     container = AppContainer()
     container.config.lm.embeddings.from_env(
         'LLM_RAG_FACTS_STORE_LANGCHAIN_EMBEDDINGS',
