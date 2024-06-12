@@ -31,6 +31,9 @@ def cli():
         'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_CHARACTER_TEXT_SPLITTER_CHUNK_OVERLAP', default=0)
     container.config.services.documents_service.text_loader.from_env(
         'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_TEXT_LOADER', default='local')
+    container.config.services.documents_service.external_text_loader_path.from_env(
+        'LLM_RAG_FACTS_STORE_LANGCHAIN_DOCUMENTS_SERVICE_EXTERNAL_TEXT_LOADER_PATH',
+        default="d:\\documents\\new_facts.txt")
     container.wire(modules=[__name__])
     # pass
 

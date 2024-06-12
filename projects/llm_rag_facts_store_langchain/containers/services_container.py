@@ -17,9 +17,15 @@ class ServicesContainer(containers.DeclarativeContainer):
         file_path=os.path.join(os.path.dirname(__file__), "../data", "facts.txt")
     )
 
+    external_text_loader = providers.Singleton(
+        TextLoader,
+        file_path=config.documents_service.external_text_loader_path,
+    )
+
     text_loader = providers.Selector(
         config.documents_service.text_loader,
-        local=local_text_loader
+        local=local_text_loader,
+        external=external_text_loader
     )
 
     character_text_splitter = providers.Singleton(
