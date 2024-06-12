@@ -1,8 +1,8 @@
 from dependency_injector import containers, providers
 
-from projects.llm_rag_facts_store_chromadb_langchain.containers.language_model_container import LanguageModelContainer
-from projects.llm_rag_facts_store_chromadb_langchain.containers.services_container import ServicesContainer
-from projects.llm_rag_facts_store_chromadb_langchain.containers.vector_store_container import VectorStoreContainer
+from projects.llm_rag_facts_store_langchain.containers.language_model_container import LanguageModelContainer
+from projects.llm_rag_facts_store_langchain.containers.services_container import ServicesContainer
+from projects.llm_rag_facts_store_langchain.containers.vector_store_container import VectorStoreContainer
 
 
 class AppContainer(containers.DeclarativeContainer):

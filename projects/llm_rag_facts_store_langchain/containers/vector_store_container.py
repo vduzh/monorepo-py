@@ -15,7 +15,7 @@ class VectorStoreContainer(containers.DeclarativeContainer):
 
     persistent_client = providers.Singleton(
         chromadb.PersistentClient,
-        path=os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_chromadb_langchain", "chroma_db")
+        path=os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_langchain", "chroma_db")
     )
 
     http_client = providers.Singleton(

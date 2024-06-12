@@ -16,7 +16,7 @@ def get_colbert_rm():
 
 
 def get_chromadb_rm():
-    path = os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_chromadb_langchain", "chroma_db")
+    path = os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_langchain", "chroma_db")
 
     return ChromadbRM(
         collection_name="facts_collection",

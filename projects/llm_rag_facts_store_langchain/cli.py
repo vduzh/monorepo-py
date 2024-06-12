@@ -2,8 +2,8 @@ import click
 from dependency_injector.wiring import Provide, inject
 from dotenv import load_dotenv
 
-from projects.llm_rag_facts_store_chromadb_langchain.app_container import AppContainer
-from projects.llm_rag_facts_store_chromadb_langchain.services.documents_service import DocumentsService
+from projects.llm_rag_facts_store_langchain.app_container import AppContainer
+from projects.llm_rag_facts_store_langchain.services.documents_service import DocumentsService
 
 # Load environment variables from .env file
 load_dotenv()

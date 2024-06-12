@@ -4,7 +4,7 @@ from dependency_injector import containers, providers
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import CharacterTextSplitter
 
-from projects.llm_rag_facts_store_chromadb_langchain.services.documents_service import DocumentsService
+from projects.llm_rag_facts_store_langchain.services.documents_service import DocumentsService
 
 
 class ServicesContainer(containers.DeclarativeContainer):
