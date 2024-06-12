@@ -8,7 +8,12 @@ class VectorStoreContainer(containers.DeclarativeContainer):
 
     lm_container = providers.DependenciesContainer()
 
-    chromadb_client = providers.Singleton(chromadb.Client)
+    in_memory_client = providers.Singleton(chromadb.Client)
+
+    chromadb_client = providers.Selector(
+        config.chromadb_client,
+        in_memory=in_memory_client,
+    )
 
     vector_store = providers.Singleton(
         Chroma,

@@ -16,6 +16,7 @@ def cli():
     # initialize the dependency injection container
     container = AppContainer()
     container.config.embedding_model_name.from_env("OPENAI_API_EMBEDDING_MODEL", required=True)
+    container.config.chromadb_client.from_env('CHROMADB_CLIENT', default='in_memory')
     container.wire(modules=[__name__])
     # pass
 
