@@ -50,11 +50,12 @@ def init_container():
     container.config.services.documents_service.documents_loader.from_env(
         f'{prefix}DOCUMENTS_SERVICE_DOCUMENTS_LOADER',
         # local and directory supported
-        default='local'
+        default='directory'
     )
     container.config.services.documents_service.directory_loader_path.from_env(
         f'{prefix}DOCUMENTS_SERVICE_DIRECTORY_LOADER_PATH',
-        default=os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_langchain", "documents", "facts_2.txt")
+        # default=os.path.join(os.path.expanduser('~'), "llm_rag_facts_store_langchain", "documents")
+        default=os.path.join(os.path.dirname(__file__), "documents")
     )
 
     return container

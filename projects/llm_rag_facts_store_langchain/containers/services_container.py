@@ -1,7 +1,7 @@
 import os
 
 from dependency_injector import containers, providers
-from langchain_community.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain_text_splitters import CharacterTextSplitter
 
 from projects.llm_rag_facts_store_langchain.services.documents_service import DocumentsService
@@ -18,9 +18,8 @@ class ServicesContainer(containers.DeclarativeContainer):
     )
 
     directory_loader = providers.Singleton(
-        # TODO: Apply the DirectoryLoader here!!!
-        TextLoader,
-        file_path=config.documents_service.directory_loader_path,
+        DirectoryLoader,
+        path=config.documents_service.directory_loader_path,
     )
 
     documents_loader = providers.Selector(
