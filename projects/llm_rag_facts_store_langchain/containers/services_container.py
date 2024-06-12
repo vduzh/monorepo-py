@@ -14,7 +14,7 @@ class ServicesContainer(containers.DeclarativeContainer):
 
     local_text_loader = providers.Singleton(
         TextLoader,
-        file_path=os.path.join(os.path.dirname(__file__), "../data", "facts.txt")
+        file_path=os.path.join(os.path.dirname(__file__), "../documents", "facts.txt")
     )
 
     external_text_loader = providers.Singleton(
