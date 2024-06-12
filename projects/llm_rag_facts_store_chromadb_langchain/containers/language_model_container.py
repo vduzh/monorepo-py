@@ -5,7 +5,12 @@ from langchain_openai import OpenAIEmbeddings
 class LanguageModelContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
 
-    embeddings = providers.Singleton(
+    openai_embeddings = providers.Singleton(
         OpenAIEmbeddings,
         model=config.embedding_model_name
+    )
+
+    embeddings = providers.Selector(
+        config.embeddings,
+        openai=openai_embeddings,
     )
