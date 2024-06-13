@@ -76,7 +76,7 @@ class TestParamiko(unittest.TestCase):
 
         # connect to the SSH server in the container
         cls.ssh_client = SSHClient()
-        cls.ssh_client.load_system_host_keys(filename="./data/known_hosts")
+        cls.ssh_client.load_system_host_keys(filename="data/known_hosts")
         cls.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
         cls.ssh_client.connect(hostname=HOST_NAME, port=PORT, username=USER_NAME, password=PASSWORD)
 
@@ -100,7 +100,7 @@ class TestParamiko(unittest.TestCase):
         with paramiko.SSHClient() as ssh_client:
             # authorize the host
             # ssh_client.load_system_host_keys()
-            ssh_client.load_system_host_keys(filename="./data/known_hosts")
+            ssh_client.load_system_host_keys(filename="data/known_hosts")
             ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy)
 
             ssh_client.connect(

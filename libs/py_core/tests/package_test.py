@@ -1,8 +1,8 @@
 import unittest
 
-from custom_package.bar_module import bar_func
-from custom_package.foo_module import foo_func
-from custom_package_2 import foo_value, bar_value
+from libs.py_core.tests.custom_package.bar_module import bar_func
+from libs.py_core.tests.custom_package.foo_module import foo_func
+from libs.py_core.tests.custom_package_2 import foo_value, bar_value
 
 
 class TestPackage(unittest.TestCase):

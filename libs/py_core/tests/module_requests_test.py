@@ -53,7 +53,7 @@ class TestRequestsModule(unittest.TestCase):
         # TODO: use anther endpoint
         res = None
 
-        with open("./data/todo_new.json") as f:
+        with open("data/todo_new.json") as f:
             files = {
                 "text_file": f
             }
