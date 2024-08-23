@@ -1,12 +1,16 @@
 import unittest
 from queue import Empty, Queue
-from threading import Thread
+from threading import Thread, Lock
 from time import sleep
+
 
 def task(code=0):
     print(f"Function: Task {code} is being started...")
     sleep(1)
     print(f"Function: Task {code} finished!")
+
+
+counter = 0
 
 
 class TestThreading(unittest.TestCase):
@@ -64,6 +68,57 @@ class TestThreading(unittest.TestCase):
 
         # дожидаемся, пока все задачи в очереди будут завершены
         task_queue.join()
+
+    def test_lock(self):
+        lock = Lock()
+        lock.acquire()
+        # ...
+        lock.release()
+
+    def test_lock_race_condition_with_lock(self):
+        def increase(lock, value):
+            lock.acquire()
+            global counter
+            counter += value
+            lock.release()
+
+        test_lock = Lock()
+
+        t1 = Thread(target=increase, args=(test_lock, 1))
+        t2 = Thread(target=increase, args=(test_lock, -2))
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+        print(f"Counter: {counter}")
+
+    def test_lock_race_condition_with_lock_in_class(self):
+        class Counter:
+
+            def __init__(self, initial_value: int):
+                self.value = initial_value
+                self.__lock = Lock()
+
+            def increase(self, value: int):
+                self.__lock.acquire()
+                self.value += value
+                self.__lock.release()
+
+        counter_obj = Counter(0)
+
+        t1 = Thread(target=counter_obj.increase, args=(5,))
+        t2 = Thread(target=counter_obj.increase, args=(-10,))
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+        print(f"Counter in class: {counter_obj.value}")
 
 
 if __name__ == '__main__':
