@@ -36,6 +36,14 @@ async def coroutine_add_one(number: int) -> int:
 
 
 @async_timed()
+async def cpu_bound_work(size=100_000_000) -> int:
+    counter = 0
+    for i in range(size):
+        counter += 1
+    return counter
+
+
+@async_timed()
 async def delay(delay_seconds: int) -> int:
     print(f'delay: Sleeping for {delay_seconds} sec. ...')
     await asyncio.sleep(delay_seconds)
@@ -208,12 +216,6 @@ class TestAsyncio(unittest.TestCase):
         asyncio.run(async_main())
 
     def test_improper_use_wih_cpu_bound(self):
-        @async_timed()
-        async def cpu_bound_work(size=100_000_000) -> int:
-            counter = 0
-            for i in range(size):
-                counter += 1
-            return counter
 
         @async_timed()
         async def async_main():
@@ -275,6 +277,16 @@ class TestAsyncio(unittest.TestCase):
             await delay(2)
 
         asyncio.run(async_main())
+
+    def test_debug_mode(self):
+        asyncio.run(cpu_bound_work(), debug=True)
+
+    def test_debug_callback_duration(self):
+        async def async_main():
+            loop = asyncio.get_event_loop()
+            loop.slow_callback_duration = .250
+
+        asyncio.run(async_main(), debug=True)
 
 
 if __name__ == '__main__':
