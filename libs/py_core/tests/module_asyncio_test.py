@@ -1,6 +1,9 @@
 import asyncio
+import functools
+import time
 import unittest
-from asyncio import CancelledError
+from asyncio import CancelledError, Future, InvalidStateError, Task
+from typing import Awaitable, Callable, Any
 
 
 async def my_coroutine() -> None:
@@ -9,6 +12,25 @@ async def my_coroutine() -> None:
 
 async def coroutine_add_one(number: int) -> int:
     return number + 1
+
+
+# a decorator to measure the execution time
+def async_timed():
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        async def wrapped(*args, **kwargs) -> Any:
+            print(f'async_timed: Function {func} has started with arguments: {args}, {kwargs}.')
+            start = time.time()
+            try:
+                return await func(*args, **kwargs)
+            finally:
+                end = time.time()
+                total = end - start
+                print(f'async_timed: Function {func} has finished. It took {total:.4f} seconds.')
+
+        return wrapped
+
+    return wrapper
 
 
 async def delay(delay_seconds: int) -> int:
@@ -41,6 +63,18 @@ class TestAsyncio(unittest.TestCase):
         # Execute the async_main coroutine
         result = asyncio.run(async_main())
         self.assertEqual((2, 3), result)
+
+    def test_awaitable(self):
+        async def async_main():
+            coroutine = coroutine_add_one(1)
+            task = asyncio.create_task(coroutine_add_one(2))
+            future = Future()
+
+            self.assertIsInstance(coroutine, Awaitable)
+            self.assertIsInstance(task, Awaitable)
+            self.assertIsInstance(future, Awaitable)
+
+        asyncio.run(async_main())
 
     def test_sleep(self):
         asyncio.run(asyncio.sleep(1))
@@ -139,6 +173,34 @@ class TestAsyncio(unittest.TestCase):
                 print(result)
             except asyncio.TimeoutError:
                 print("The task has been running more than 2 sec. It will finish soon.")
+
+        asyncio.run(async_main())
+
+    def test_create_future(self):
+        # create an object
+        future = Future()
+
+        # check if the status is false
+        self.assertFalse(future.done())
+        # check for an exception if the result is not set
+        with self.assertRaises(InvalidStateError):
+            future.result()
+
+        # set the result
+        future.set_result(123)
+        # check for a true status
+        self.assertTrue(future.done())
+        # check if the result is 123
+        self.assertEqual(123, future.result())
+
+    def test_future_is_superclass_of_task(self):
+        self.assertIsInstance(Future(), Task)
+
+    def test_timing(self):
+        @async_timed()
+        async def async_main():
+            task = asyncio.create_task(delay(3))
+            await task
 
         asyncio.run(async_main())
 
