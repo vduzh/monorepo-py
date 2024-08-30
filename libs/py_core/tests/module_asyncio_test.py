@@ -1,5 +1,6 @@
 import asyncio
 import unittest
+from asyncio import CancelledError
 
 
 async def my_coroutine() -> None:
@@ -11,9 +12,9 @@ async def coroutine_add_one(number: int) -> int:
 
 
 async def delay(delay_seconds: int) -> int:
-    print(f'Sleeping for {delay_seconds} sec. ...')
+    print(f'delay: Sleeping for {delay_seconds} sec. ...')
     await asyncio.sleep(delay_seconds)
-    print(f'Waking up after {delay_seconds} sec. of sleep.')
+    print(f'delay: Waking up after {delay_seconds} sec. of sleep.')
     return delay_seconds
 
 
@@ -92,6 +93,52 @@ class TestAsyncio(unittest.TestCase):
             await some_code()
             await task_1
             await task_2
+
+        asyncio.run(async_main())
+
+    def test_cancel_task_from_other_code(self):
+        async def async_main():
+            # execute a long running task
+            long_task = asyncio.create_task(delay(10))
+
+            # wait for 5 sec for the task to finish
+            seconds_elapsed = 0
+            while not long_task.done():
+                print(f"The task is still running. Nex check in 1 sec.")
+                await asyncio.sleep(1)
+                seconds_elapsed += 1
+                if seconds_elapsed == 5:
+                    long_task.cancel()
+
+            try:
+                await long_task
+            except CancelledError:
+                print(f"The task has been cancelled.")
+
+        asyncio.run(async_main())
+
+    def test_cancel_task_with_wait_for(self):
+        async def async_main():
+            delay_task = asyncio.create_task(delay(5))
+
+            try:
+                result = await asyncio.wait_for(delay_task, timeout=2)
+                print(result)
+            except asyncio.TimeoutError:
+                print("Timeout occurred.")
+                print(f"Has the task been cancelled? {delay_task.cancelled()}!")
+
+        asyncio.run(async_main())
+
+    def test_shield_task(self):
+        async def async_main():
+            task = asyncio.create_task(delay(5))
+
+            try:
+                result = await asyncio.wait_for(asyncio.shield(task), timeout=2)
+                print(result)
+            except asyncio.TimeoutError:
+                print("The task has been running more than 2 sec. It will finish soon.")
 
         asyncio.run(async_main())
 
