@@ -245,6 +245,37 @@ class TestAsyncio(unittest.TestCase):
 
         asyncio.run(async_main())
 
+    def test_create_event_loop_manually(self):
+        @async_timed()
+        async def async_main():
+            await asyncio.sleep(1)
+
+        # manually create an event loop
+        loop = asyncio.new_event_loop()
+
+        try:
+            # gets a coroutine and executes and wait it until completion
+            loop.run_until_complete(async_main())
+        finally:
+            loop.close()
+
+    def test_access_event_loop(self):
+        def call_later():
+            print("call_later: I got called!")
+
+        @async_timed()
+        async def async_main():
+            # get an event loop
+            loop = asyncio.get_running_loop()
+
+            # do some stuff with the look
+            loop.call_soon(call_later)
+
+            # call a coroutine
+            await delay(2)
+
+        asyncio.run(async_main())
+
 
 if __name__ == '__main__':
     unittest.main()
