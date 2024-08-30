@@ -5,6 +5,27 @@ import unittest
 from asyncio import CancelledError, Future, InvalidStateError, Task
 from typing import Awaitable, Callable, Any
 
+import requests
+
+
+# a decorator to measure the execution time
+def async_timed():
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        async def wrapped(*args, **kwargs) -> Any:
+            print(f'async_timed: Function {func.__name__} has started with arguments: {args}, {kwargs}.')
+            start = time.time()
+            try:
+                return await func(*args, **kwargs)
+            finally:
+                end = time.time()
+                total = end - start
+                print(f'async_timed: Function {func.__name__} has finished. It took {total:.4f} seconds.')
+
+        return wrapped
+
+    return wrapper
+
 
 async def my_coroutine() -> None:
     print("My coroutine!")
@@ -14,25 +35,7 @@ async def coroutine_add_one(number: int) -> int:
     return number + 1
 
 
-# a decorator to measure the execution time
-def async_timed():
-    def wrapper(func: Callable) -> Callable:
-        @functools.wraps(func)
-        async def wrapped(*args, **kwargs) -> Any:
-            print(f'async_timed: Function {func} has started with arguments: {args}, {kwargs}.')
-            start = time.time()
-            try:
-                return await func(*args, **kwargs)
-            finally:
-                end = time.time()
-                total = end - start
-                print(f'async_timed: Function {func} has finished. It took {total:.4f} seconds.')
-
-        return wrapped
-
-    return wrapper
-
-
+@async_timed()
 async def delay(delay_seconds: int) -> int:
     print(f'delay: Sleeping for {delay_seconds} sec. ...')
     await asyncio.sleep(delay_seconds)
@@ -201,6 +204,44 @@ class TestAsyncio(unittest.TestCase):
         async def async_main():
             task = asyncio.create_task(delay(3))
             await task
+
+        asyncio.run(async_main())
+
+    def test_improper_use_wih_cpu_bound(self):
+        @async_timed()
+        async def cpu_bound_work(size=100_000_000) -> int:
+            counter = 0
+            for i in range(size):
+                counter += 1
+            return counter
+
+        @async_timed()
+        async def async_main():
+            task_1 = asyncio.create_task(cpu_bound_work(100_000_000))
+            task_2 = asyncio.create_task(cpu_bound_work(90_000_000))
+            task_3 = asyncio.create_task(delay(4))
+
+            await task_1
+            await task_2
+            await task_3
+
+        asyncio.run(async_main())
+
+    def test_improper_use_of_sync_api(self):
+        @async_timed()
+        async def call_sync_api(code) -> int:
+            # here is a synchronous api call as the get method blocks code execution
+            return requests.get("http://example.com").status_code
+
+        @async_timed()
+        async def async_main():
+            task_1 = asyncio.create_task(call_sync_api(1))
+            task_2 = asyncio.create_task(call_sync_api(2))
+            task_3 = asyncio.create_task(call_sync_api(3))
+
+            await task_1
+            await task_2
+            await task_3
 
         asyncio.run(async_main())
 
