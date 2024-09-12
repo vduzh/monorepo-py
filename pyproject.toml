@@ -70,3 +70,4 @@ pymilvus = {extras = ["model"], version = "2.3.5"}
 click = "^8.1.7"
 dependency-injector = "^4.41.0"
 pdfminer-six = "^20231228"
+multiprocess = "^0.70.16"
