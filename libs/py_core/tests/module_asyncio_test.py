@@ -8,6 +8,22 @@ from typing import Awaitable, Callable, Any
 import requests
 
 
+# a decorator to log method calls
+def log_calls():
+    def wrapper(func: Callable) -> Callable:
+        @functools.wraps(func)
+        async def wrapped(*args, **kwargs) -> Any:
+            print(f'{func.__name__} started with arguments: {args}, {kwargs}.')
+            try:
+                return await func(*args, **kwargs)
+            finally:
+                print(f'{func.__name__} finished.')
+
+        return wrapped
+
+    return wrapper
+
+
 # a decorator to measure the execution time
 def async_timed():
     def wrapper(func: Callable) -> Callable:
@@ -25,10 +41,6 @@ def async_timed():
         return wrapped
 
     return wrapper
-
-
-async def my_coroutine() -> None:
-    print("My coroutine!")
 
 
 async def coroutine_add_one(number: int) -> int:
@@ -53,13 +65,19 @@ async def delay(delay_seconds: int) -> int:
 
 class TestAsyncio(unittest.TestCase):
     def test_create_coroutine(self):
-        result_coroutine = my_coroutine()
-        print(type(result_coroutine))
-        # self.assertIsInstance(result_coroutine, coroutine)
+        async def my_coroutine() -> int:
+            return 2
 
-    def test_execute_coroutine(self):
-        # Execute the coroutine_add_one coroutine
-        result_num = asyncio.run(coroutine_add_one(2))
+        coroutine_obj = my_coroutine()
+        print(f"Type is: {type(coroutine_obj)}\nResult is: {coroutine_obj}")
+
+    def test_execute_coroutine_on_event_loop(self):
+        # create a coroutine object
+        coroutine_obj = coroutine_add_one(2)
+
+        # put the coroutine object on an event loop to execute it
+        result_num = asyncio.run(coroutine_obj)
+
         self.assertEqual(3, result_num)
 
     def test_await(self):
@@ -88,9 +106,18 @@ class TestAsyncio(unittest.TestCase):
         asyncio.run(async_main())
 
     def test_sleep(self):
-        asyncio.run(asyncio.sleep(1))
+        async def hello_world_message() -> str:
+            await asyncio.sleep(1)
+            return "Hello World!"
+
+        async def async_main():
+            message = await hello_world_message()
+            print(message)
+
+        asyncio.run(async_main())
 
     def test_simulate_long_term_operation(self):
+
         async def async_main():
             await delay(2)
             return 'hello world!'
@@ -101,14 +128,15 @@ class TestAsyncio(unittest.TestCase):
     def test_create_task(self):
         async def async_main():
             # schedules the execution of the coroutine object
-            sleep_for_three_task = asyncio.create_task(delay(2))
+            task = asyncio.create_task(delay(2))
+            print(f'The type of the task id: {type(task)}')
 
-            # ... some code might be here ...
-            print(f'The type of the task id: {type(sleep_for_three_task)}')
+            # ...
+            # some code might be here
+            # ...
 
             # suspends async_main until the task ends and returns the result
-            result = await sleep_for_three_task
-
+            result = await task
             return result
 
         res = asyncio.run(async_main())
@@ -120,7 +148,11 @@ class TestAsyncio(unittest.TestCase):
             task_2 = asyncio.create_task(delay(3))
             task_3 = asyncio.create_task(delay(1))
 
-            return await task_1, await task_2, await task_3
+            res_1 = await task_1
+            res_2 = await task_2
+            res_3 = await task_3
+
+            return res_1, res_2, res_3
 
         res = asyncio.run(async_main())
         self.assertEqual((2, 3, 1), res)
@@ -203,6 +235,35 @@ class TestAsyncio(unittest.TestCase):
         self.assertTrue(future.done())
         # check if the result is 123
         self.assertEqual(123, future.result())
+
+        future = Future()
+        future.set_exception(BaseException("Some exception occurred"))
+        # check for an exception if the result is not set
+        with self.assertRaises(BaseException):
+            future.result()
+
+    def test_await_future(self):
+        @log_calls()
+        async def set_future_value(future):
+            await asyncio.sleep(2)
+            future.set_result(100)
+
+        def make_request() -> Future:
+            future = Future()
+            asyncio.create_task(set_future_value(future))
+            return future
+
+        @log_calls()
+        @async_timed()
+        async def async_main():
+            # create request
+            future = make_request()
+            # wait for the result
+            value = await future
+            # assert the result
+            self.assertEqual(100, value)
+
+        asyncio.run(async_main())
 
     def test_future_is_superclass_of_task(self):
         self.assertIsInstance(Future(), Task)
