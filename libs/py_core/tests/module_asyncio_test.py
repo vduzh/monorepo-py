@@ -1,10 +1,13 @@
 import asyncio
 import functools
+import signal
+import socket
 import time
 import unittest
-from asyncio import CancelledError, Future, InvalidStateError, Task
+from asyncio import CancelledError, Future, InvalidStateError, Task, AbstractEventLoop
 from typing import Awaitable, Callable, Any
 
+import multiprocess as mp  # Note that we are importing "multiprocess", no "ing"!
 import requests
 
 
@@ -45,7 +48,6 @@ def async_timed():
 
 async def coroutine_add_one(number: int) -> int:
     return number + 1
-
 
 @async_timed()
 async def cpu_bound_work(size=100_000_000) -> int:
@@ -348,6 +350,79 @@ class TestAsyncio(unittest.TestCase):
             loop.slow_callback_duration = .250
 
         asyncio.run(async_main(), debug=True)
+
+    def test_handle_signals(self):
+
+        def handle_signal():
+            print(f'Received the signal.')
+
+        async def async_main():
+            loop: AbstractEventLoop = asyncio.get_running_loop()
+            loop.add_signal_handler(signal.SIGINT, handle_signal)
+
+            await delay(10)
+
+        asyncio.run(async_main())
+
+    def test_async_server(self):
+        def run_server():
+
+            async def process_request(client_socket: socket, loop: AbstractEventLoop):
+                print("Server:", "Processing data from the client socket...")
+
+                # wait for data from the infinite loop
+                while data := await loop.sock_recv(client_socket, 1024):
+                    print("Server:", f'I got data: {data}!')
+
+                    # send data back to the client
+                    print("Server:", "Writing data back to a client...")
+                    await loop.sock_sendall(client_socket, data)
+                    print("Server:", "The data has been sent!")
+
+            async def async_main():
+                server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                server_socket.setblocking(False)
+                server_socket.bind(('127.0.0.1', 8000))
+                server_socket.listen()
+
+                event_loop: AbstractEventLoop = asyncio.get_event_loop()
+
+                while True:
+                    # wait for the user connection
+                    client_socket, client_address = await event_loop.sock_accept(server_socket)
+                    client_socket.setblocking(False)
+                    print("Server:", f'I got a connection from {client_address}!')
+
+                    # handle the clients request
+                    asyncio.create_task(process_request(client_socket, event_loop))
+
+            asyncio.run(async_main())
+
+        def run_client():
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
+                print("Client:", "Creating connection...")
+                # connect to a remote socket at the address
+                client_socket.connect(("127.0.0.1", 8000))
+                # write data to the server
+                print("Client:", "Writing data to the server...")
+                client_socket.sendall(b"Hello, world\r\n")
+                # receive up to 1024 bytes from the server
+                print("Client:", "Receiving the response...")
+                data = client_socket.recv(1024)
+                print("Client:", f"Received {data!r}")
+
+        # create a process for each task
+        process_1 = mp.Process(target=run_server)
+        process_2 = mp.Process(target=run_client)
+
+        # run processes
+        process_1.start()
+        process_2.start()
+
+        # wait for the end of the  processes
+        process_1.join()
+        process_2.join()
 
 
 if __name__ == '__main__':
