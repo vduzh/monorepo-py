@@ -395,7 +395,7 @@ class TestAsyncio(unittest.TestCase):
                     print("Server:", f'I got a connection from {client_address}!')
 
                     # handle the clients request
-                    asyncio.create_task(process_request(client_socket, event_loop))
+                    await asyncio.create_task(process_request(client_socket, event_loop))
 
             asyncio.run(async_main())
 
