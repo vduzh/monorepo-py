@@ -49,6 +49,7 @@ def async_timed():
 async def coroutine_add_one(number: int) -> int:
     return number + 1
 
+
 @async_timed()
 async def cpu_bound_work(size=100_000_000) -> int:
     counter = 0
@@ -155,6 +156,14 @@ class TestAsyncio(unittest.TestCase):
             res_3 = await task_3
 
             return res_1, res_2, res_3
+
+        res = asyncio.run(async_main())
+        self.assertEqual((2, 3, 1), res)
+
+    def test_gather(self):
+        async def async_main():
+            delay_list = [delay(i) for i in [2, 3, 1]]
+            return await asyncio.gather(*delay_list)
 
         res = asyncio.run(async_main())
         self.assertEqual((2, 3, 1), res)
