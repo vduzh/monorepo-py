@@ -168,6 +168,34 @@ class TestAsyncio(unittest.TestCase):
         res = asyncio.run(async_main())
         self.assertEqual((2, 3, 1), res)
 
+    def test_gather_exceptions(self):
+        @log_calls()
+        async def coroutine(code):
+            # await delay(code)
+            if code % 2 == 0:
+                return code
+
+            raise ValueError("Some exception")
+
+        async def async_main():
+            coroutines = [coroutine(i) for i in [1, 2]]
+            try:
+                result = await asyncio.gather(*coroutines)
+                return result
+            except ValueError as e:
+                print(f"Handled error: {e}" )
+
+        asyncio.run(async_main())
+
+        async def async_main_2():
+            coroutines = [coroutine(i) for i in [1, 2]]
+            return await asyncio.gather(*coroutines, return_exceptions=True)
+
+        res = asyncio.run(async_main_2())
+        self.assertIsInstance(res[0], ValueError)
+        self.assertEqual(res[1], 2)
+
+
     def test_execute_code_while_other_operations_work(self):
         async def some_code():
             for i in range(5):
