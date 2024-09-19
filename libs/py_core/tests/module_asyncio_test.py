@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import logging
 import signal
 import socket
 import time
@@ -64,6 +65,15 @@ async def delay(delay_seconds: int) -> int:
     await asyncio.sleep(delay_seconds)
     print(f'delay: Waking up after {delay_seconds} sec. of sleep.')
     return delay_seconds
+
+
+@log_calls()
+async def some_code(i):
+    if i < 0:
+        raise ValueError("Some error occurred!")
+
+    await asyncio.sleep(i)
+    return i
 
 
 class TestAsyncio(unittest.TestCase):
@@ -197,11 +207,6 @@ class TestAsyncio(unittest.TestCase):
 
     def test_as_completed(self):
         @log_calls()
-        async def some_code(i):
-            await asyncio.sleep(i)
-            return i
-
-        @log_calls()
         async def async_main():
             results = []
             awaitable_list = [some_code(i) for i in [1, 5, 2]]
@@ -229,6 +234,87 @@ class TestAsyncio(unittest.TestCase):
 
         res = asyncio.run(async_main_with_timeout())
         print(res)
+
+    def test_wait(self):
+
+        @log_calls()
+        async def async_main():
+            tasks = [asyncio.create_task(some_code(i)) for i in [1, 2]]
+            done, pending = await asyncio.wait(tasks)
+
+            print(f"The number of the done tasks {len(done)}")
+            print(f"The number of the pending tasks {len(pending)}")
+
+        asyncio.run(async_main())
+
+    def test_wait_with_error(self):
+        @log_calls()
+        async def async_main():
+            tasks = [asyncio.create_task(some_code(i)) for i in [1, 3, -1]]
+            done, pending = await asyncio.wait(tasks)  # ALL_COMPLETED
+
+            print(f"The number of the done tasks {len(done)}")
+            print(f"The number of the pending tasks {len(pending)}")
+
+            for task in done:
+                if task.exception() is None:
+                    print(f"Task result: {task.result()}")
+                else:
+                    logging.error("Error occurred", exc_info=task.exception())
+
+        asyncio.run(async_main())
+
+    def test_wait_with_error_and_first_exception(self):
+        @log_calls()
+        async def async_main():
+            tasks = [asyncio.create_task(some_code(i)) for i in [1, 3, -1]]
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+
+            print(f"The number of the done tasks: {len(done)}")
+            print(f"The number of the pending tasks: {len(pending)}")
+
+            for task in done:
+                if task.exception() is None:
+                    print(f"Task result: {task.result()}")
+                else:
+                    print(f"Error occurred at one of the tasks.")
+                    # logging.error("Error occurred", exc_info=task.exception())
+
+            for task in pending:
+                task.cancel()
+
+        asyncio.run(async_main())
+
+    def test_wait_return_when_with_first_completed(self):
+        @log_calls()
+        async def async_main():
+            tasks = [asyncio.create_task(some_code(i)) for i in [1, 3, 2]]
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+
+            print(f"The number of the done tasks: {len(done)}")
+            print(f"The number of the pending tasks: {len(pending)}")
+
+            for task in done:
+                print(f"Done task result: {task.result()}")
+
+        asyncio.run(async_main())
+
+    def test_wait_all_completed(self):
+        @log_calls()
+        async def async_main():
+            pending = [asyncio.create_task(some_code(i)) for i in [1, 3, 2]]
+
+            while pending:
+                print(f"Loop: calling wait for {len(pending)} tasks: {pending}")
+                done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+
+                print(f"The number of the done tasks: {len(done)}")
+                print(f"The number of the pending tasks: {len(pending)}")
+
+                for task in done:
+                    print(f"Done task result: {task.result()}")
+
+        asyncio.run(async_main())
 
     def test_execute_code_while_other_operations_work(self):
         async def some_code():
