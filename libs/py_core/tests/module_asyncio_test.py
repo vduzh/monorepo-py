@@ -20,7 +20,7 @@ def log_calls():
             try:
                 return await func(*args, **kwargs)
             finally:
-                print(f'{func.__name__} finished.')
+                print(f'{func.__name__} with arguments: {args}, {kwargs} finished.')
 
         return wrapped
 
@@ -183,7 +183,7 @@ class TestAsyncio(unittest.TestCase):
                 result = await asyncio.gather(*coroutines)
                 return result
             except ValueError as e:
-                print(f"Handled error: {e}" )
+                print(f"Handled error: {e}")
 
         asyncio.run(async_main())
 
@@ -195,6 +195,40 @@ class TestAsyncio(unittest.TestCase):
         self.assertIsInstance(res[0], ValueError)
         self.assertEqual(res[1], 2)
 
+    def test_as_completed(self):
+        @log_calls()
+        async def some_code(i):
+            await asyncio.sleep(i)
+            return i
+
+        @log_calls()
+        async def async_main():
+            results = []
+            awaitable_list = [some_code(i) for i in [1, 5, 2]]
+            for finished_tasks in asyncio.as_completed(awaitable_list):
+                results.append(await finished_tasks)
+            return results
+
+        res = asyncio.run(async_main())
+        print(res)
+
+        @log_calls()
+        async def async_main_with_timeout():
+            results = []
+            awaitable_list = [some_code(i) for i in [1, 5, 2]]
+            for finished_tasks in asyncio.as_completed(awaitable_list, timeout=3):
+                try:
+                    results.append(await finished_tasks)
+                except asyncio.TimeoutError:
+                    print("Timeout has happened!")
+
+            for task in asyncio.all_tasks():
+                print(f"Task is still working: {task} ")
+
+            return results
+
+        res = asyncio.run(async_main_with_timeout())
+        print(res)
 
     def test_execute_code_while_other_operations_work(self):
         async def some_code():
