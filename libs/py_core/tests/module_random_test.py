@@ -3,6 +3,7 @@ import string
 import unittest
 
 
+
 class TestRandom(unittest.TestCase):
 
     def test_random(self):
@@ -31,7 +32,7 @@ class TestRandom(unittest.TestCase):
         self.assertEqual(value1, value3)
         self.assertEqual(value2, value4)
 
-    def test_seed(self):
+    def test_seed_2(self):
         colors = ['red', 'green', 'blue']
         res = random.choices(colors, k=10)
         print(res)
@@ -41,6 +42,10 @@ class TestRandom(unittest.TestCase):
         res = random.choices(colors, weights, k=10)
         print(res)
         self.assertEqual(len(res), 10)
+
+    def test_sample(self):
+        res = random.sample(range(5), 5)
+        print(res)
 
     if __name__ == '__main__':
         unittest.main()
