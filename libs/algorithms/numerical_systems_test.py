@@ -3,7 +3,7 @@ import unittest
 
 class TestNumericalSystems(unittest.TestCase):
 
-    def test_decimal_to_oter(self):
+    def test_decimal_to_other_base(self):
         def convert(value: int, base: int) -> str:
             res = ""
             while value > 0:
@@ -14,7 +14,7 @@ class TestNumericalSystems(unittest.TestCase):
         self.assertEqual("1100100", convert(100, 2))
         self.assertEqual("210154", convert(10996, 16))
 
-    def test_oter_to_decimal(self):
+    def test_other_base_to_decimal(self):
         def convert(value: str, base: int) -> str:
             res = 0
             reversed_value = value[::-1]
@@ -54,7 +54,7 @@ class TestNumericalSystems(unittest.TestCase):
 
     def test_bit_reverse(self):
 
-        def b(value: int, base: int = 2) -> str:
+        def b(value: int, base: int = 2) -> int:
             bits = ""
             while value > 0:
                 bits += str(value % base)
