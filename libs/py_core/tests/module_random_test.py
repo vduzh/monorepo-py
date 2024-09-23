@@ -1,7 +1,5 @@
 import random
-import string
 import unittest
-
 
 
 class TestRandom(unittest.TestCase):
@@ -46,6 +44,16 @@ class TestRandom(unittest.TestCase):
     def test_sample(self):
         res = random.sample(range(5), 5)
         print(res)
+
+    def test_generate(self):
+        words = ['hello', 'world', 'test', 'item', 'car']
+
+        res = [(words[index],) for index in random.sample(range(5), 5)]
+        print(res)
+
+        print(type(res[0]))
+        print(res[0])
+        print(len(res[0]))
 
     if __name__ == '__main__':
         unittest.main()
