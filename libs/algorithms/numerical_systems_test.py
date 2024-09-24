@@ -7,7 +7,11 @@ class TestNumericalSystems(unittest.TestCase):
         def convert(value: int, base: int) -> str:
             res = ""
             while value > 0:
-                res = str(value % base) + res
+                # calculate remainder from dividing value by base
+                reminder = value % base
+                # handle reminder
+                res = str(reminder) + res
+                # divide value by base without a remainder
                 value = value // base
             return res
 
@@ -17,15 +21,20 @@ class TestNumericalSystems(unittest.TestCase):
     def test_other_base_to_decimal(self):
         def convert(value: str, base: int) -> str:
             res = 0
-            reversed_value = value[::-1]
-            for i in range(len(reversed_value)):
-                res += int(reversed_value[i]) * base ** i
+            for i in range(len(value)):
+                # digit
+                digit = int(value[i])
+                # digit index
+                digit_index = len(value) - i - 1
+                # calculate and add to the res
+                res += digit * base ** digit_index
             return res
 
         self.assertEqual(0, convert("0", 2))
         self.assertEqual(1, convert("01", 2))
         self.assertEqual(2, convert("10", 2))
         self.assertEqual(3, convert("11", 2))
+        self.assertEqual(100, convert("1100100", 2))
 
     def test_decimal_to_binary_ones_count(self):
         def ones_count(value: int, base: int = 2) -> int:
