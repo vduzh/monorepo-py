@@ -128,3 +128,38 @@ class TestBinarySearch(unittest.TestCase):
 
         self.assertEqual(86, search(DATA, 87.0))
         self.assertEqual(10, search(DATA, 11.00))
+
+    def test_task_min_time_to_copy(self):
+        data_set = [
+            (4, 1, 1, 3),
+            (5, 1, 2, 4),
+        ]
+
+        for data in data_set:
+            n, x, y, expected_value = data
+
+            # start of the task
+            # n, x, y = [int(s) for s in input("").split()]
+
+            res = 0
+            if n == 1:
+                res = min(x, y)
+            else:
+                res = min(x, y)
+
+                left = 0
+                right = max(x, y) * (n - 1)
+                while left < right:
+                    mid = (left + right) // 2
+                    copies_count = mid // x + mid // y
+
+                    if n - 1 > copies_count:
+                        left = mid + 1
+                    else:
+                        right = mid
+
+                res += left
+            print(res)
+            # end of the task
+
+            self.assertEqual(expected_value, res)
