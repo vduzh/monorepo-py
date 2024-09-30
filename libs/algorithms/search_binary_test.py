@@ -145,19 +145,27 @@ class TestBinarySearch(unittest.TestCase):
             if n == 1:
                 res = min(x, y)
             else:
+                # make first copy
                 res = min(x, y)
 
+                # make n-1 copies
                 left = 0
                 right = max(x, y) * (n - 1)
                 while left < right:
                     mid = (left + right) // 2
+                    # calculate the number of copies after mid seconds
                     copies_count = mid // x + mid // y
 
+                    # check if we need more copies
                     if n - 1 > copies_count:
+                        # yes -> find the better time at the right
                         left = mid + 1
                     else:
+                        # now -> find the better time at the left
                         right = mid
 
+                # left = mid = right at the end of the loop
+                # add found time to the res
                 res += left
             print(res)
             # end of the task
