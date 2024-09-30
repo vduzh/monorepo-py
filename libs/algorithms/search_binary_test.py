@@ -21,110 +21,110 @@ class TestBinarySearch(unittest.TestCase):
         self.assertEqual(4, math.ceil(math.log2(10)))
         self.assertEqual(63, math.ceil(math.log2(5 * 10 ** 18)))
 
-        def test_search_ints(self):
-            def search(left: int, right: int, target: int):
-                while left < right:
-                    # find the middle position
-                    mid = (left + right) // 2
+    def test_search_ints(self):
+        def search(left: int, right: int, target: int):
+            while left < right:
+                # find the middle position
+                mid = (left + right) // 2
 
-                    # check the middle and correct either the left or the right position
-                    if target > mid:
-                        # correct the left position as the result is on the right side
-                        left = mid + 1
-                    else:
-                        # correct the right position as the result is on the left side
-                        right = mid
-                # now left == mid == right
-                return left
+                # check the middle and correct either the left or the right position
+                if target > mid:
+                    # correct the left position as the result is on the right side
+                    left = mid + 1
+                else:
+                    # correct the right position as the result is on the left side
+                    right = mid
+            # now left == mid == right
+            return left
 
-            for gess_num in [3, 2, 5, 9]:
-                self.assertEqual(gess_num, search(2, 9, gess_num))
+        for gess_num in [3, 2, 5, 9]:
+            self.assertEqual(gess_num, search(2, 9, gess_num))
 
-        def test_search_in_int_list(self):
-            def search(numbers: list[int], target: int) -> int:
-                # init the left and right positions
-                left = 0
-                right = len(numbers) - 1
+    def test_search_in_int_list(self):
+        def search(numbers: list[int], target: int) -> int:
+            # init the left and right positions
+            left = 0
+            right = len(numbers) - 1
 
-                # walking through the positions
-                while left < right:
-                    # find the middle position
-                    mid = (left + right) // 2
+            # walking through the positions
+            while left < right:
+                # find the middle position
+                mid = (left + right) // 2
 
-                    # get the value at the middle positions
-                    mid_value = numbers[mid]
+                # get the value at the middle positions
+                mid_value = numbers[mid]
 
-                    if target > mid_value:
-                        left = mid + 1
-                    else:
-                        right = mid
-                target_index = left
+                if target > mid_value:
+                    left = mid + 1
+                else:
+                    right = mid
+            target_index = left
 
-                return target_index
+            return target_index
 
-            self.assertEqual(86, search(DATA, 87))
-            self.assertEqual(10, search(DATA, 11))
+        self.assertEqual(86, search(DATA, 87))
+        self.assertEqual(10, search(DATA, 11))
 
-        def test_search_floats(self):
-            def search(left: float, right: float, eps: float, target: float):
-                while left < right:
-                    mid = (left + right) / 2
+    def test_search_floats(self):
+        def search(left: float, right: float, eps: float, target: float):
+            while left < right:
+                mid = (left + right) / 2
 
-                    if (target - mid) > eps:
-                        left = mid
-                    elif (mid - target) > eps:
-                        right = mid
-                    else:
-                        left = right = mid
+                if (target - mid) > eps:
+                    left = mid
+                elif (mid - target) > eps:
+                    right = mid
+                else:
+                    left = right = mid
 
-                print(f"target: {target}, left: {left}, eps: {round(target - left, 2)}")
-                return left
+            # print(f"target: {target}, left: {left}, eps: {round(target - left, 2)}")
+            return left
 
-            eps_value = 0.5
-            for gess_num in [3.0, 2.1, 3.4, 7.1, 8.8]:
-                self.assertTrue(
-                    gess_num,
-                    abs(search(2.0, 9.0, eps_value, gess_num) - gess_num) <= eps_value
-                )
+        eps_value = 0.5
+        for gess_num in [3.0, 2.1, 3.4, 7.1, 8.8]:
+            self.assertTrue(
+                gess_num,
+                abs(search(2.0, 9.0, eps_value, gess_num) - gess_num) <= eps_value
+            )
 
-        def test_search_in_float_list(self):
-            def search(numbers: list[float], target: float) -> int:
-                left = 0
-                right = len(numbers) - 1
+    def test_search_in_float_list(self):
+        def search(numbers: list[float], target: float) -> int:
+            left = 0
+            right = len(numbers) - 1
 
-                while left < right:
-                    mid = (left + right) // 2
+            while left < right:
+                mid = (left + right) // 2
 
-                    mid_value = numbers[mid]
+                mid_value = numbers[mid]
 
-                    if target > mid_value:
-                        left = mid + 1
-                    else:
-                        right = mid
-                target_index = left
+                if target > mid_value:
+                    left = mid + 1
+                else:
+                    right = mid
+            target_index = left
 
-                return target_index
+            return target_index
 
-            self.assertEqual(86, search(DATA, 87.0))
-            self.assertEqual(10, search(DATA, 11.00))
+        self.assertEqual(86, search(DATA, 87.0))
+        self.assertEqual(10, search(DATA, 11.00))
 
-        def test_search_in_float_lis(self):
-            def search(numbers: list[float], target: float) -> int:
-                left = 0
-                right = len(numbers) - 1
+    def test_search_in_float_lis(self):
+        def search(numbers: list[float], target: float) -> int:
+            left = 0
+            right = len(numbers) - 1
 
-                while left < right:
-                    mid = (left + right) // 2
+            while left < right:
+                mid = (left + right) // 2
 
-                    mid_value = numbers[mid]
+                mid_value = numbers[mid]
 
-                    if target > mid_value:
-                        left = mid + 1
-                    else:
-                        right = mid
-                target_index = left
+                if target > mid_value:
+                    left = mid + 1
+                else:
+                    right = mid
+            target_index = left
 
-                return target_index
+            return target_index
 
-            self.assertEqual(86, search(DATA, 87.0))
-            self.assertEqual(10, search(DATA, 11.00))
+        self.assertEqual(86, search(DATA, 87.0))
+        self.assertEqual(10, search(DATA, 11.00))
