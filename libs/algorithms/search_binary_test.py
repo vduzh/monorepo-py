@@ -133,6 +133,9 @@ class TestBinarySearch(unittest.TestCase):
         data_set = [
             (4, 1, 1, 3),
             (5, 1, 2, 4),
+            (30, 2, 3, 38),
+            (135, 2, 5, 194),
+            (173, 3, 5, 327),
         ]
 
         for data in data_set:
@@ -171,3 +174,43 @@ class TestBinarySearch(unittest.TestCase):
             # end of the task
 
             self.assertEqual(expected_value, res)
+
+    def test_task_max_length(self):
+        data_set = [
+            (2, 2, 2, 2, 2),
+            (10, 10, 0, 0, 3),
+            (2, 1, 7, 1, 1),
+        ]
+
+        for data in data_set:
+            a_1, a_2, a_3, a_4, expected_value = data
+
+            # start of the task
+            # a_1, a_2, a_3, a_4 = [int(s) for s in input("").split()]
+
+            # calculate the number of squares
+            squares_count = min(a_1, a_2) + min(a_3, a_4)
+
+            max_length = 0
+            # init
+            left = 0
+            right = squares_count
+            while left < right:
+                # choose the possible length as the middle
+                mid = (left + right) // 2
+                # calculate the number of squares to build the squares with the side of the mid length
+                required_squares_count = mid ** 2
+
+                if squares_count >= required_squares_count:
+                    # save mid as possible result
+                    max_length = mid
+                    # correct left to try to find a better length
+                    left = mid + 1
+                else:
+                    # correct right to try to find a better length
+                    right = mid
+
+            print(max_length)
+            # end of the task
+
+            self.assertEqual(expected_value, max_length)
