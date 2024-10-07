@@ -13,3 +13,28 @@ class BubbleSort(unittest.TestCase):
         data = [1, 3, 4, 2]
         sort(data)
         self.assertEqual([1, 2, 3, 4], data)
+
+    def test_task_inversion_count(self):
+        data_set = [
+            (3, [7, 2, 5], 2),
+            (10, [12, 7, 92, 5, 18, 4, 32, 48, 11, 74], 18),
+        ]
+
+        for data in data_set:
+            n, lst, expected_value = data
+
+            # start of the task
+            # n = int(input(""))
+            # lst = [int(s) for s in input("").split()]
+
+            count = 0
+            for i in range(len(lst)):
+                for j in range(i + 1, len(lst)):
+                    if lst[i] > lst[j]:
+                        lst[j], lst[i] = lst[i], lst[j]
+                        count += 1
+
+            print(count)
+            # end of the task
+
+            self.assertEqual(expected_value, count)
