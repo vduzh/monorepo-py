@@ -3,15 +3,15 @@ import unittest
 
 class BubbleSort(unittest.TestCase):
 
-    def test_bubble_search(self):
-        def sort(lst: list[int]):
+    def test_sort(self):
+        def bubble_sort(lst: list[int]):
             for i in range(len(lst)):
                 for j in range(len(lst) - 1):
                     if lst[j] > lst[j + 1]:
                         lst[j], lst[j + 1] = lst[j + 1], lst[j]
 
         data = [1, 3, 4, 2]
-        sort(data)
+        bubble_sort(data)
         self.assertEqual([1, 2, 3, 4], data)
 
     def test_task_inversion_count(self):
@@ -30,7 +30,7 @@ class BubbleSort(unittest.TestCase):
             count = 0
             for i in range(len(lst)):
                 for j in range(len(lst) - 1):
-                    if lst[j] > lst[j+1]:
+                    if lst[j] > lst[j + 1]:
                         lst[j], lst[j + 1] = lst[j + 1], lst[j]
                         count += 1
 
