@@ -6,9 +6,9 @@ class BubbleSort(unittest.TestCase):
     def test_bubble_search(self):
         def sort(lst: list[int]):
             for i in range(len(lst)):
-                for j in range(i + 1, len(lst)):
-                    if lst[i] > lst[j]:
-                        lst[j], lst[i] = lst[i], lst[j]
+                for j in range(len(lst) - 1):
+                    if lst[j] > lst[j + 1]:
+                        lst[j], lst[j + 1] = lst[j + 1], lst[j]
 
         data = [1, 3, 4, 2]
         sort(data)
@@ -29,9 +29,9 @@ class BubbleSort(unittest.TestCase):
 
             count = 0
             for i in range(len(lst)):
-                for j in range(i + 1, len(lst)):
-                    if lst[i] > lst[j]:
-                        lst[j], lst[i] = lst[i], lst[j]
+                for j in range(len(lst) - 1):
+                    if lst[j] > lst[j+1]:
+                        lst[j], lst[j + 1] = lst[j + 1], lst[j]
                         count += 1
 
             print(count)
