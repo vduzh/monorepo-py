@@ -9,10 +9,9 @@ class BubbleSort(unittest.TestCase):
                 for j in range(len(lst) - 1):
                     if lst[j] > lst[j + 1]:
                         lst[j], lst[j + 1] = lst[j + 1], lst[j]
+            return lst
 
-        data = [1, 3, 4, 2]
-        bubble_sort(data)
-        self.assertEqual([1, 2, 3, 4], data)
+        self.assertEqual([1, 2, 3, 4], bubble_sort([1, 3, 4, 2]))
 
     def test_task_inversion_count(self):
         data_set = [
