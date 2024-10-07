@@ -1,4 +1,7 @@
+import random
 import unittest
+
+from libs.algorithms.util.timed import timed_func
 
 
 class QuickSort(unittest.TestCase):
@@ -26,3 +29,8 @@ class QuickSort(unittest.TestCase):
 
         self.assertEqual([1, 2, 3, 4], quick_sort([1, 3, 4, 2]))
         self.assertEqual([2, 5, 7], quick_sort([7, 2, 5]))
+
+        timed_func(
+            quick_sort,
+            [random.randint(1, 10_000) for i in range(500_000)]
+        )
