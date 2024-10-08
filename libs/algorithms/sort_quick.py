@@ -37,7 +37,7 @@ class QuickSort(unittest.TestCase):
                     if i <= j:
                         # swap two elements
                         lst[i], lst[j] = lst[j], lst[i]
-                        # move to the next element
+                        # move to the next element at the left
                         i += 1
                         # move to the next element at the right
                         j -= 1
