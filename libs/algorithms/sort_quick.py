@@ -20,26 +20,26 @@ class QuickSort(unittest.TestCase):
     def test_sort(self):
         def quick_sort(lst: list[int], left: int, right: int):
             if left < right:
-                # calculate the medium value
+                # calculate the value in the middle of the list
                 middle = lst[(left + right) // 2]
 
-                # divide lst into 2 parts so tha left part is less or equal to the right part
+                # split the list into two parts such that the left part is less than or equal to the right part
                 i, j = left, right
                 while i <= j:
-                    # find the first element in the left part that greater or equal to the middle value
+                    # find the first element in the left part that is greater than or equal to the middle value
                     while lst[i] < middle:
                         i += 1
-                    # find the first element in the right part that less or equal to the middle value
+                    # find the first element in the right part that is less than or equal to the middle value
                     while lst[j] > middle:
                         j -= 1
 
-                    # check if there are elements at the both sides to swap
+                    # check if there are elements on both sides to swap
                     if i <= j:
                         # swap two elements
                         lst[i], lst[j] = lst[j], lst[i]
-                        # move to the next element at the left
+                        # move to the next element on the left
                         i += 1
-                        # move to the next element at the right
+                        # move to the next element on the right
                         j -= 1
 
                 # sort the left part of the list
