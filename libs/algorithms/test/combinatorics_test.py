@@ -1,3 +1,4 @@
+import math
 import unittest
 
 
@@ -27,6 +28,8 @@ class CombinatoricsTest(unittest.TestCase):
             # end of the task
 
             self.assertEqual(expected, res)
+
+            math.comb(1)
 
     def test_number_of_arrangements(self):
         data_set = [
@@ -101,6 +104,32 @@ class CombinatoricsTest(unittest.TestCase):
                 combinations = factorial(n) // (factorial(n - k) * factorial(k))
                 res += combinations
             print(res)
+            # end of the task
+
+            self.assertEqual(expected, res)
+
+    def test_chess(self):
+        """
+        Task: https://acmp.ru/asp/do/index.asp?main=task&id_course=2&id_section=16&id_topic=21&id_problem=107
+        """
+        data_set = [
+            (8, 8, 40320),
+        ]
+
+        for data in data_set:
+            n, k, expected = data
+
+            # start of the task
+            # n, k = [int(s) for s in input("").split()]
+
+            num_of_rows = math.comb(n, k)
+            num_of_cells = math.comb(n, k)
+            num_of_permutations = math.perm(k, k)
+
+            res = num_of_rows * num_of_cells * num_of_permutations
+
+            print(res)
+
             # end of the task
 
             self.assertEqual(expected, res)
