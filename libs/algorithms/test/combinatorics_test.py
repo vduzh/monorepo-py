@@ -2,13 +2,6 @@ import math
 import unittest
 
 
-def factorial(n: int) -> int:
-    if n == 0 or n == 1:
-        return 1
-
-    return n * factorial(n - 1)
-
-
 class CombinatoricsTest(unittest.TestCase):
 
     def test_number_of_permutations(self):
@@ -23,13 +16,13 @@ class CombinatoricsTest(unittest.TestCase):
             # start of the task
             # n = int(input(""))
 
-            res = factorial(n)
+            # res = math.perm(n, n)
+            res = math.factorial(n)
+
             print(res)
             # end of the task
 
             self.assertEqual(expected, res)
-
-            math.comb(1)
 
     def test_number_of_arrangements(self):
         data_set = [
@@ -42,7 +35,8 @@ class CombinatoricsTest(unittest.TestCase):
             # start of the task
             # n, k = [int(s) for s in input("").split()]
 
-            res = factorial(n) // factorial(n - k)
+            # res = math.perm(n, k)
+            res = math.factorial(n) // math.factorial(n - k)
             print(res)
             # end of the task
 
@@ -59,7 +53,8 @@ class CombinatoricsTest(unittest.TestCase):
             # start of the task
             # n, k = [int(s) for s in input("").split()]
 
-            res = factorial(n) // (factorial(n - k) * factorial(k))
+            # res = math.comb(n, k)
+            res = math.factorial(n) // (math.factorial(n - k) * math.factorial(k))
             print(res)
             # end of the task
 
@@ -78,7 +73,8 @@ class CombinatoricsTest(unittest.TestCase):
             # n = int(input(""))
             k = 3
 
-            res = factorial(n) // factorial(n - k)
+            # res = math.factorial(n) // math.factorial(n - k)
+            res = math.perm(n, k)
             print(res)
             # end of the task
 
@@ -101,7 +97,8 @@ class CombinatoricsTest(unittest.TestCase):
 
             res = 0
             for k in range(2, n + 1):
-                combinations = factorial(n) // (factorial(n - k) * factorial(k))
+                # combinations = math.factorial(n) // (math.factorial(n - k) * math.factorial(k))
+                combinations = math.comb(n, k)
                 res += combinations
             print(res)
             # end of the task
@@ -122,14 +119,58 @@ class CombinatoricsTest(unittest.TestCase):
             # start of the task
             # n, k = [int(s) for s in input("").split()]
 
+            # all the options below are Ok
+            # num_of_rows = math.factorial(n) // (math.factorial(n - k) * math.factorial(k))
             num_of_rows = math.comb(n, k)
-            num_of_cells = math.comb(n, k)
-            num_of_permutations = math.perm(k, k)
 
+            # all the options below are Ok
+            # num_of_cells = math.factorial(n) // (math.factorial(n - k) * math.factorial(n - k))
+            # num_of_cells = math.comb(n, k)
+            num_of_cells = num_of_rows
+
+            # all the options below are Ok
+            # num_of_permutations = math.perm(k, k)
+            num_of_permutations = math.factorial(k)
+
+            # calculate
             res = num_of_rows * num_of_cells * num_of_permutations
 
             print(res)
+            # end of the task
 
+            self.assertEqual(expected, res)
+
+    def test_cards(self):
+        """
+        Task: https://acmp.ru/asp/do/index.asp?main=task&id_course=2&id_section=16&id_topic=21&id_problem=108
+
+        Topic: Arrangements with repetition
+        """
+
+        data_set = [
+            ("solo", 12),
+        ]
+
+        for data in data_set:
+            txt, expected = data
+
+            # start of the task
+            # txt = input("")
+
+            # calculate the dividend first
+            dividend = math.factorial(len(txt))
+
+            # calculate the divider then
+            divider = 1
+            unique_chars = set(txt)
+            for c in unique_chars:
+                count = txt.count(c)
+                divider *= math.factorial(count)
+
+            # calculate the result
+            res = dividend // divider
+
+            print(res)
             # end of the task
 
             self.assertEqual(expected, res)
